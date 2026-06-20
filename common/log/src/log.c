@@ -24,7 +24,9 @@
 #include "log.h"
 
 #define MAX_CALLBACKS 32
+#ifndef LOG_DISABLE_COLOR
 #define LOG_USE_COLOR
+#endif
 
 typedef struct {
 	log_LogFn fn;
@@ -63,7 +65,7 @@ static void stdout_callback(log_Event *ev) {
 #else
 	fprintf(
 			ev->outfile, "%s: %s %-5s %s:%d: ",
-			tag, buf, level_strings[ev->level], ev->file, ev->line);
+			ev->tag, buf, level_strings[ev->level], ev->file, ev->line);
 #endif
 	vfprintf(ev->outfile, ev->fmt, ev->ap);
 	fprintf(ev->outfile, "\n");
