@@ -35,7 +35,10 @@ dll_err  dll_pop_tail(dll_list *self, void **out);  /* out may be NULL */
 
 /* match(stored_value, key) returns 0 when equal (strcmp-style).
  * On hit: returns DLL_OK and (if found != NULL) *found = node.
- * On miss: returns DLL_NOT_FOUND and *found = NULL. */
+ * On miss: returns DLL_NOT_FOUND and *found = NULL.
+ * self is const because the search does not modify the list; the returned
+ * non-const dll_node* intentionally lets the caller mutate the found node's
+ * payload. */
 dll_err  dll_find(const dll_list *self, const void *key,
                   int (*match)(const void *a, const void *b), dll_node **found);
 
