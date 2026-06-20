@@ -1,0 +1,6 @@
+[submodule "avr-libs"]
+	path = avr-libs
+	url = git@mannk98:mannk98/avr-libs.git
+[submodule "esp-idf-template"]
+	path = esp-idf-template
+	url = git@mannk98:mannk98/esp-idf-template.git
