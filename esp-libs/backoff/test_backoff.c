@@ -30,6 +30,12 @@ static void test_max_below_base_clamps(void) {
 static void test_null_guard(void) {
     TEST_ASSERT_EQUAL_UINT32(0, backoff_next(NULL));
 }
+static void test_base_zero_clamped(void) {
+    backoff b;
+    backoff_init(&b, 0, 1000);                       /* base 0 -> clamped to 1 */
+    TEST_ASSERT_EQUAL_UINT32(1, backoff_next(&b));
+    TEST_ASSERT_EQUAL_UINT32(2, backoff_next(&b));
+}
 
 int main(void) {
     UNITY_BEGIN();
@@ -37,5 +43,6 @@ int main(void) {
     RUN_TEST(test_reset);
     RUN_TEST(test_max_below_base_clamps);
     RUN_TEST(test_null_guard);
+    RUN_TEST(test_base_zero_clamped);
     return UNITY_END();
 }

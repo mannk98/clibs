@@ -40,6 +40,7 @@ static void test_match_exact(void) {
 }
 static void test_null_guard(void) {
     TEST_ASSERT_FALSE(mqtt_topic_match(NULL, "a"));
+    TEST_ASSERT_FALSE(mqtt_topic_match("a", NULL));
     TEST_ASSERT_EQUAL_INT(-1, mqtt_topic_join(NULL, 10, NULL, 0));
 }
 

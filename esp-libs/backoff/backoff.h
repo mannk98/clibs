@@ -10,7 +10,7 @@ typedef struct {
     uint32_t cur_ms;
 } backoff;
 
-/* Initialize: cur = base; if max < base, max is raised to base. */
+/* Initialize: cur = base; if max < base, max is raised to base. base_ms 0 is clamped to 1. */
 void backoff_init(backoff *self, uint32_t base_ms, uint32_t max_ms);
 /* Return the current delay, then double it toward max_ms (overflow-safe cap). */
 uint32_t backoff_next(backoff *self);

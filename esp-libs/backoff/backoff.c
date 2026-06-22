@@ -3,6 +3,7 @@
 
 void backoff_init(backoff *self, uint32_t base_ms, uint32_t max_ms) {
     if (self == NULL) return;
+    if (base_ms == 0) base_ms = 1; /* a 0 base would disable spacing */
     if (max_ms < base_ms) max_ms = base_ms;
     self->base_ms = base_ms;
     self->max_ms  = max_ms;
