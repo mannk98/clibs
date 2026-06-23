@@ -11,6 +11,10 @@
 #include "json_get.h"
 #include "periodic.h"
 #include "mdns_node.h"
+#include "relay.h"
+#include "button.h"
+#include "dht.h"
+#include "pwm_dimmer.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -97,4 +101,30 @@ void app_main(void)
     char bip[16];
     (void) mdns_node_resolve("broker.local", bip, sizeof bip, 1000);
     ESP_LOGI(TAG, "broker ip=%s", bip);
+
+    /* relay compile-gate. */
+    relay r;
+    (void) relay_init(&r, GPIO_NUM_5, false);
+    (void) relay_set(&r, true);
+    (void) relay_toggle(&r);
+    ESP_LOGI(TAG, "relay on=%d", (int) relay_is_on(&r));
+
+    /* button compile-gate. */
+    button btn;
+    (void) button_init(&btn, GPIO_NUM_4, true, 3);
+    (void) button_poll(&btn);
+    ESP_LOGI(TAG, "btn pressed=%d", (int) button_is_pressed(&btn));
+
+    /* dht compile-gate. */
+    dht dh;
+    (void) dht_init(&dh, GPIO_NUM_2);
+    int16_t dht_t = 0, dht_h = 0;
+    (void) dht_read(&dh, &dht_t, &dht_h);
+    ESP_LOGI(TAG, "dht t=%d h=%d", (int) dht_t, (int) dht_h);
+
+    /* pwm_dimmer compile-gate. */
+    pwm_dimmer dim;
+    (void) pwm_dimmer_init(&dim, GPIO_NUM_14, 1000);
+    (void) pwm_dimmer_set(&dim, 50);
+    ESP_LOGI(TAG, "dimmer set");
 }
