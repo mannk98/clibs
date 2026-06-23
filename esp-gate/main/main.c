@@ -6,8 +6,15 @@
 #include "mqtt_topic.h"
 #include "nvs_kv.h"
 #include "mqtt_node.h"
+#include "device_id_get.h"
+#include "json_build.h"
+#include "json_get.h"
+#include "periodic.h"
+#include "mdns_node.h"
 
 static const char *TAG = "esp_libs_gate";
+
+static void gate_tick(void *ctx) { (void) ctx; }
 
 void app_main(void)
 {
@@ -62,4 +69,32 @@ void app_main(void)
     (void) mqtt_node_subscribe("home/livingroom/node-1/set", 1);
     (void) mqtt_node_publish("home/livingroom/node-1/state", "on", 0, 1, 1);
     ESP_LOGI(TAG, "mqtt state=%d", (int) mqtt_node_get_state());
+
+    /* device_id compile-gate. */
+    char id[24];
+    (void) device_id_get(id, sizeof id, "esp-");
+    ESP_LOGI(TAG, "id=%s", id);
+
+    /* json compile-gate. */
+    char payload[64];
+    json_build jb;
+    json_build_init(&jb, payload, sizeof payload);
+    json_build_str(&jb, "state", "on");
+    json_build_int(&jb, "rssi", -60);
+    (void) json_build_end(&jb);
+    char cmd[16];
+    (void) json_get_str("{\"cmd\":\"on\"}", "cmd", cmd, sizeof cmd, "off");
+    (void) json_get_int("{\"level\":42}", "level", 0);
+    ESP_LOGI(TAG, "payload=%s cmd=%s", payload, cmd);
+
+    /* periodic compile-gate. */
+    periodic pt;
+    (void) periodic_start(&pt, 5000, gate_tick, 0);
+    (void) periodic_stop(&pt);
+
+    /* mdns_node compile-gate. */
+    (void) mdns_node_init("node-1");
+    char bip[16];
+    (void) mdns_node_resolve("broker.local", bip, sizeof bip, 1000);
+    ESP_LOGI(TAG, "broker ip=%s", bip);
 }

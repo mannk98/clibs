@@ -5,9 +5,10 @@ FreeRTOS). Built bottom-up:
 
 - **Layer 1 — pure logic (this set):** plain portable C, host-unit-tested with
   Unity, no SDK/hardware needed (compiles on ESP8266 unchanged).
-- **Layer 2 — SDK wrappers (this set, compile-gated):** `wifi_sta`, `mqtt_node`,
-  `nvs_kv` — thin ESP8266-RTOS-SDK glue, verified by the `esp-gate` link (not
-  host-testable, no hardware).
+- **Layer 2 — SDK wrappers (this set):** `wifi_sta`, `mqtt_node`, `nvs_kv`,
+  `device_id`, `json`, `periodic`, `mdns_node` — ESP8266-RTOS-SDK glue verified by
+  the `esp-gate` link; the pure parts (`device_id_format`, the `json` builder) are
+  host-Unity-tested.
 - *Layer 3 — device drivers* (DHT, DS18B20, relay…) — later, needs hardware.
 
 ## Layer-1 libraries
@@ -75,6 +76,33 @@ built-in auto-reconnect.
 - `mqtt_node_publish/_subscribe(...)`, `mqtt_node_stop()`, `mqtt_node_get_state()`.
 - `cfg.state_cb` reports CONNECTED/DISCONNECTED; `cfg.msg_cb` delivers inbound
   messages (topic/data with explicit lengths — not NUL-terminated).
+
+### `device_id` — stable id from the MAC
+
+- `device_id_format(mac, buf, n, "esp-")` — pure, host-tested: last 3 MAC bytes as
+  hex after a prefix (e.g. `"esp-3c71bf"`).
+- `device_id_get(buf, n, "esp-")` — reads the station MAC and formats it (use for
+  the MQTT `client_id`, a default `node_id`, or a topic prefix).
+
+### `json` — payload builder + command getters
+
+- `json_build` (pure, host-tested, no malloc): `json_build_init/_str/_int/_raw/_end`
+  builds a small JSON object like `{"state":"on","rssi":-60}` into a fixed buffer;
+  `_end` returns the length or -1 on overflow.
+- `json_get_str/_int(json, key, …, def)` (cJSON) — read a field from an inbound
+  command payload with a default.
+
+### `periodic` — esp_timer periodic callback
+
+- `periodic_start(&p, period_ms, cb, ctx)` / `periodic_stop(&p)` — fire `cb(ctx)`
+  every `period_ms` (telemetry cadence). The callback runs in the esp_timer task —
+  keep it short.
+
+### `mdns_node` — mDNS
+
+- `mdns_node_init("node-1")` — start mDNS and set the hostname.
+- `mdns_node_resolve("broker.local", ip, sizeof ip, 1000)` — resolve a host to a
+  dotted-quad IP. (Named `mdns_node` to avoid the SDK header `mdns.h`.)
 
 ### Compile-gate
 

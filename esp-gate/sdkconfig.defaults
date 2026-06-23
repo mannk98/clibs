@@ -1,0 +1,2 @@
+# Gate-only defaults — mDNS must be enabled so mdns_node.c links.
+CONFIG_ENABLE_MDNS=y
