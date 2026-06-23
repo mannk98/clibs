@@ -11,6 +11,7 @@
 #include "json_get.h"
 #include "periodic.h"
 #include "mdns_node.h"
+#include "relay.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -97,4 +98,11 @@ void app_main(void)
     char bip[16];
     (void) mdns_node_resolve("broker.local", bip, sizeof bip, 1000);
     ESP_LOGI(TAG, "broker ip=%s", bip);
+
+    /* relay compile-gate. */
+    relay r;
+    (void) relay_init(&r, GPIO_NUM_5, false);
+    (void) relay_set(&r, true);
+    (void) relay_toggle(&r);
+    ESP_LOGI(TAG, "relay on=%d", (int) relay_is_on(&r));
 }
