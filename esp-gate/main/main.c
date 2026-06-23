@@ -4,6 +4,7 @@
 #include "debounce.h"
 #include "filter.h"
 #include "mqtt_topic.h"
+#include "nvs_kv.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -36,4 +37,15 @@ void app_main(void)
     };
     (void) wifi_sta_start(&cfg);
     ESP_LOGI(TAG, "state=%d", (int) wifi_sta_get_state());
+
+    /* nvs_kv compile-gate: touch enough of the surface to link it. */
+    (void) nvs_kv_init();
+    nvs_kv kv;
+    if (nvs_kv_open(&kv, "node", true) == ESP_OK) {
+        char ssid[33];
+        (void) nvs_kv_get_str(&kv, "ssid", ssid, sizeof ssid, "default-ap");
+        (void) nvs_kv_set_u32(&kv, "boot", 1);
+        (void) nvs_kv_commit(&kv);
+        nvs_kv_close(&kv);
+    }
 }
