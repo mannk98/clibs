@@ -6,6 +6,7 @@
 #include "mqtt_topic.h"
 #include "nvs_kv.h"
 #include "mqtt_node.h"
+#include "device_id_get.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -62,4 +63,9 @@ void app_main(void)
     (void) mqtt_node_subscribe("home/livingroom/node-1/set", 1);
     (void) mqtt_node_publish("home/livingroom/node-1/state", "on", 0, 1, 1);
     ESP_LOGI(TAG, "mqtt state=%d", (int) mqtt_node_get_state());
+
+    /* device_id compile-gate. */
+    char id[24];
+    (void) device_id_get(id, sizeof id, "esp-");
+    ESP_LOGI(TAG, "id=%s", id);
 }

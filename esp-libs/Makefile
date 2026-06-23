@@ -4,8 +4,8 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic strict clean
-test: backoff debounce filter mqtt_topic
+.PHONY: test backoff debounce filter mqtt_topic device_id strict clean
+test: backoff debounce filter mqtt_topic device_id
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -30,11 +30,17 @@ mqtt_topic: | $(BUILD)
 	    mqtt_topic/test_mqtt_topic.c mqtt_topic/mqtt_topic.c $(UNITY)/unity.c
 	./$(BUILD)/test_mqtt_topic
 
+device_id: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Idevice_id -o $(BUILD)/test_device_id \
+	    device_id/test_device_id.c device_id/device_id.c $(UNITY)/unity.c
+	./$(BUILD)/test_device_id
+
 strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibackoff    -c backoff/backoff.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idebounce   -c debounce/debounce.c     -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ifilter     -c filter/filter.c         -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Imqtt_topic -c mqtt_topic/mqtt_topic.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Idevice_id -c device_id/device_id.c -o /dev/null
 	@echo "strict: OK"
 
 clean:
