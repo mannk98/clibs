@@ -4,6 +4,8 @@
 #include "debounce.h"
 #include "filter.h"
 #include "mqtt_topic.h"
+#include "nvs_kv.h"
+#include "mqtt_node.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -36,4 +38,28 @@ void app_main(void)
     };
     (void) wifi_sta_start(&cfg);
     ESP_LOGI(TAG, "state=%d", (int) wifi_sta_get_state());
+
+    /* nvs_kv compile-gate: touch enough of the surface to link it. */
+    (void) nvs_kv_init();
+    nvs_kv kv;
+    if (nvs_kv_open(&kv, "node", true) == ESP_OK) {
+        char ssid[33];
+        (void) nvs_kv_get_str(&kv, "ssid", ssid, sizeof ssid, "default-ap");
+        (void) nvs_kv_set_u32(&kv, "boot", 1);
+        (void) nvs_kv_commit(&kv);
+        nvs_kv_close(&kv);
+    }
+
+    /* mqtt_node compile-gate: touch enough of the surface to link it. */
+    mqtt_node_config mcfg = {
+        .uri = "mqtt://192.168.4.1:1883",
+        .client_id = "node-1",
+        .presence_topic = "home/livingroom/node-1/online",
+        .online_msg = "1", .offline_msg = "0", .presence_qos = 1,
+        .state_cb = 0, .msg_cb = 0, .cb_ctx = 0,
+    };
+    (void) mqtt_node_start(&mcfg);
+    (void) mqtt_node_subscribe("home/livingroom/node-1/set", 1);
+    (void) mqtt_node_publish("home/livingroom/node-1/state", "on", 0, 1, 1);
+    ESP_LOGI(TAG, "mqtt state=%d", (int) mqtt_node_get_state());
 }
