@@ -1,6 +1,7 @@
 #include "wifi_sta.h"
 #include "backoff.h"
 
+#include <stdbool.h>
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -16,6 +17,7 @@ static void                 *s_cb_ctx;
 static backoff               s_backoff;
 static volatile wifi_sta_state s_state = WIFI_STA_DISCONNECTED;
 static TaskHandle_t          s_reconnect_task;
+static bool                  s_inited = false;
 
 static void set_state(wifi_sta_state st) {
     s_state = st;
@@ -57,13 +59,20 @@ esp_err_t wifi_sta_start(const wifi_sta_config *cfg) {
     backoff_init(&s_backoff, cfg->backoff_base_ms, cfg->backoff_max_ms);
     s_state = WIFI_STA_DISCONNECTED;
 
-    tcpip_adapter_init();
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
+    if (!s_inited) {
+        tcpip_adapter_init();
 
-    wifi_init_config_t init_cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&init_cfg));
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
+        esp_err_t le = esp_event_loop_create_default();
+        if (le != ESP_OK && le != ESP_ERR_INVALID_STATE) return le;
+
+        wifi_init_config_t init_cfg = WIFI_INIT_CONFIG_DEFAULT();
+        ESP_ERROR_CHECK(esp_wifi_init(&init_cfg));
+        ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL));
+        ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL));
+
+        xTaskCreate(reconnect_task, "wifi_sta_recon", 2048, NULL, 5, &s_reconnect_task);
+        s_inited = true;
+    }
 
     wifi_config_t wc = {0};
     strncpy((char *) wc.sta.ssid, cfg->ssid, sizeof(wc.sta.ssid));
@@ -72,24 +81,13 @@ esp_err_t wifi_sta_start(const wifi_sta_config *cfg) {
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wc));
-
-    if (s_reconnect_task == NULL)
-        xTaskCreate(reconnect_task, "wifi_sta_recon", 2048, NULL, 5, &s_reconnect_task);
-
     ESP_ERROR_CHECK(esp_wifi_start());
     return ESP_OK;
 }
 
 esp_err_t wifi_sta_stop(void) {
-    esp_err_t err = esp_wifi_stop();
-    esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler);
-    esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler);
-    if (s_reconnect_task) {
-        vTaskDelete(s_reconnect_task);
-        s_reconnect_task = NULL;
-    }
     s_state = WIFI_STA_DISCONNECTED;
-    return err;
+    return esp_wifi_stop();
 }
 
 wifi_sta_state wifi_sta_get_state(void) {
