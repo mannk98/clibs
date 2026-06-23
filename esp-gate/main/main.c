@@ -7,6 +7,8 @@
 #include "nvs_kv.h"
 #include "mqtt_node.h"
 #include "device_id_get.h"
+#include "json_build.h"
+#include "json_get.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -68,4 +70,16 @@ void app_main(void)
     char id[24];
     (void) device_id_get(id, sizeof id, "esp-");
     ESP_LOGI(TAG, "id=%s", id);
+
+    /* json compile-gate. */
+    char payload[64];
+    json_build jb;
+    json_build_init(&jb, payload, sizeof payload);
+    json_build_str(&jb, "state", "on");
+    json_build_int(&jb, "rssi", -60);
+    (void) json_build_end(&jb);
+    char cmd[16];
+    (void) json_get_str("{\"cmd\":\"on\"}", "cmd", cmd, sizeof cmd, "off");
+    (void) json_get_int("{\"level\":42}", "level", 0);
+    ESP_LOGI(TAG, "payload=%s cmd=%s", payload, cmd);
 }

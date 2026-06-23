@@ -4,8 +4,8 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic device_id strict clean
-test: backoff debounce filter mqtt_topic device_id
+.PHONY: test backoff debounce filter mqtt_topic device_id json_build strict clean
+test: backoff debounce filter mqtt_topic device_id json_build
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -35,12 +35,18 @@ device_id: | $(BUILD)
 	    device_id/test_device_id.c device_id/device_id.c $(UNITY)/unity.c
 	./$(BUILD)/test_device_id
 
+json_build: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ijson -o $(BUILD)/test_json_build \
+	    json/test_json_build.c json/json_build.c $(UNITY)/unity.c
+	./$(BUILD)/test_json_build
+
 strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibackoff    -c backoff/backoff.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idebounce   -c debounce/debounce.c     -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ifilter     -c filter/filter.c         -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Imqtt_topic -c mqtt_topic/mqtt_topic.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idevice_id -c device_id/device_id.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ijson -c json/json_build.c -o /dev/null
 	@echo "strict: OK"
 
 clean:
