@@ -6,7 +6,7 @@ FreeRTOS). Built bottom-up:
 - **Layer 1 — pure logic (this set):** plain portable C, host-unit-tested with
   Unity, no SDK/hardware needed (compiles on ESP8266 unchanged).
 - **Layer 2 — SDK wrappers (this set):** `wifi_sta`, `mqtt_node`, `nvs_kv`,
-  `device_id`, `json`, `periodic`, `mdns_node` — ESP8266-RTOS-SDK glue verified by
+  `device_id`, `json`, `periodic`, `mdns_node`, `adc_a0`, `i2c_bus`, `spi_bus` — ESP8266-RTOS-SDK glue verified by
   the `esp-gate` link; the pure parts (`device_id_format`, the `json` builder) are
   host-Unity-tested.
 - **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer` —
@@ -137,6 +137,22 @@ built-in auto-reconnect.
 - `pwm_dimmer_init(&d, pin, period_us)` then `pwm_dimmer_set(&d, percent)`.
   `dimmer_duty(percent, max_duty)` (pure, host-tested) maps 0–100 % to a duty.
   NOTE: the SDK PWM is a single global subsystem — one dimmer on channel 0.
+
+### `adc_a0` — A0 ADC
+
+- `adc_a0_init()` then `adc_a0_read(&raw)` (0..1023) or `adc_a0_read_ema(&filter, &out)`
+  to read through an L1 `ema`. Compose with `map_range` for real units.
+
+### `i2c_bus` — I2C master
+
+- `i2c_bus_init(sda, scl)` then `i2c_bus_write_reg(addr, reg, data, len)` /
+  `i2c_bus_read_reg(addr, reg, data, len)` (7-bit addr, repeated-start read). For
+  BME280/OLED/RTC-class devices. Runtime verified on hardware later.
+
+### `spi_bus` — HSPI master
+
+- `spi_bus_init()` then `spi_bus_transfer(tx, rx, len)` (full-duplex, len 1..64;
+  rx NULL for write-only). Runtime verified on hardware later.
 
 ### Compile-gate
 
