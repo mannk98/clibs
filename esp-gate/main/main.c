@@ -13,6 +13,7 @@
 #include "mdns_node.h"
 #include "relay.h"
 #include "button.h"
+#include "dht.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -112,4 +113,11 @@ void app_main(void)
     (void) button_init(&btn, GPIO_NUM_4, true, 3);
     (void) button_poll(&btn);
     ESP_LOGI(TAG, "btn pressed=%d", (int) button_is_pressed(&btn));
+
+    /* dht compile-gate. */
+    dht dh;
+    (void) dht_init(&dh, GPIO_NUM_2);
+    int16_t dht_t = 0, dht_h = 0;
+    (void) dht_read(&dh, &dht_t, &dht_h);
+    ESP_LOGI(TAG, "dht t=%d h=%d", (int) dht_t, (int) dht_h);
 }
