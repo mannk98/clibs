@@ -9,7 +9,7 @@ FreeRTOS). Built bottom-up:
   `device_id`, `json`, `periodic`, `mdns_node`, `adc_a0`, `i2c_bus`, `spi_bus` — ESP8266-RTOS-SDK glue verified by
   the `esp-gate` link; the pure parts (`device_id_format`, the `json` builder) are
   host-Unity-tested.
-- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer` —
+- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer`, `ds18b20`, `servo`, `hcsr04` —
   GPIO/PWM/bit-bang glue verified by the `esp-gate` link; the pure parts
   (`relay_level`, `dht_parse`, `dimmer_duty`) are host-Unity-tested. **Hardware run
   is deferred** — bit-bang timing (dht) is a first cut to tune on real hardware.
@@ -153,6 +153,25 @@ built-in auto-reconnect.
 
 - `spi_bus_init()` then `spi_bus_transfer(tx, rx, len)` (full-duplex, len 1..64;
   rx NULL for write-only). Runtime verified on hardware later.
+
+### `ds18b20` — 1-Wire temperature
+
+- `ds18b20_parse_temp(scratch, &temp_mc)` (pure, host-tested): validate the 9-byte
+  scratchpad via `crc8_maxim` and convert to milli-°C.
+- `ds18b20_init(&d, pin)` then `ds18b20_read(&d, &temp_mc)` bit-bangs a single-drop
+  1-Wire read. Timing is a first cut — tune on hardware.
+
+### `servo` — PWM servo
+
+- `servo_angle_to_duty(angle)` (pure, host-tested): 0–180° → 1000–2000 µs pulse.
+- `servo_init(&s, pin)` (50 Hz) then `servo_set(&s, angle)`. Shares the single global
+  PWM with `pwm_dimmer` — only one at a time.
+
+### `hcsr04` — ultrasonic distance
+
+- `hcsr04_us_to_mm(echo_us)` (pure, host-tested): echo time → mm.
+- `hcsr04_init(&h, trig, echo)` then `hcsr04_read(&h, &mm)` (trigger + bounded echo
+  measure → `ESP_ERR_TIMEOUT` on no echo). Timing tuned on hardware.
 
 ### Compile-gate
 
