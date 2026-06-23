@@ -20,6 +20,7 @@
 #include "map_range.h"
 #include "median.h"
 #include "throttle.h"
+#include "adc_a0.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -147,4 +148,14 @@ void app_main(void)
     throttle_init(&th, 1000);
     (void) throttle_allow(&th, 0);
     ESP_LOGI(TAG, "l1 extras linked");
+
+    /* adc_a0 compile-gate. */
+    (void) adc_a0_init();
+    uint16_t araw = 0;
+    (void) adc_a0_read(&araw);
+    ema af;
+    ema_init(&af, 3, 0);
+    int32_t aval = 0;
+    (void) adc_a0_read_ema(&af, &aval);
+    ESP_LOGI(TAG, "adc raw=%u smoothed=%d", (unsigned) araw, (int) aval);
 }
