@@ -22,6 +22,11 @@ FreeRTOS). Built bottom-up:
 | `debounce` | Input debounce with edge detection (`debounce_init/update/level`). |
 | `filter` | Integer EMA smoothing for ADC (`ema_init/update`, alpha = 1/2^shift, no floats). |
 | `mqtt_topic` | Topic join + MQTT `+`/`#` wildcard match (`mqtt_topic_join/match`). |
+| `hysteresis` | Schmitt-trigger deadband on/off control (`hysteresis_init/update/state`). |
+| `crc` | `crc8_maxim` (1-Wire) + `crc16_modbus` checksums. |
+| `map_range` | Integer linear map + `clamp_i32` (ADC counts → real units). |
+| `median` | `median3` despike (median of three). |
+| `throttle` | Minimum-interval gate (`throttle_init/allow`) for rate-limiting. |
 
 Each is freestanding (`<stdint.h>`/`<stdbool.h>`/`<stddef.h>`, +`<string.h>` in
 `mqtt_topic`), static / no-malloc, transparent struct + `self`-methods.

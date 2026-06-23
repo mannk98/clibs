@@ -4,8 +4,8 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty strict clean
-test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty
+.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle strict clean
+test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -55,6 +55,31 @@ dimmer_duty: | $(BUILD)
 	    pwm_dimmer/test_dimmer_duty.c pwm_dimmer/dimmer_duty.c $(UNITY)/unity.c
 	./$(BUILD)/test_dimmer_duty
 
+hysteresis: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ihysteresis -o $(BUILD)/test_hysteresis \
+	    hysteresis/test_hysteresis.c hysteresis/hysteresis.c $(UNITY)/unity.c
+	./$(BUILD)/test_hysteresis
+
+crc: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Icrc -o $(BUILD)/test_crc \
+	    crc/test_crc.c crc/crc.c $(UNITY)/unity.c
+	./$(BUILD)/test_crc
+
+map_range: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Imap_range -o $(BUILD)/test_map_range \
+	    map_range/test_map_range.c map_range/map_range.c $(UNITY)/unity.c
+	./$(BUILD)/test_map_range
+
+median: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Imedian -o $(BUILD)/test_median \
+	    median/test_median.c median/median.c $(UNITY)/unity.c
+	./$(BUILD)/test_median
+
+throttle: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ithrottle -o $(BUILD)/test_throttle \
+	    throttle/test_throttle.c throttle/throttle.c $(UNITY)/unity.c
+	./$(BUILD)/test_throttle
+
 strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibackoff    -c backoff/backoff.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idebounce   -c debounce/debounce.c     -o /dev/null
@@ -65,6 +90,11 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Irelay -c relay/relay_level.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idht -c dht/dht_parse.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ipwm_dimmer -c pwm_dimmer/dimmer_duty.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ihysteresis -c hysteresis/hysteresis.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Icrc        -c crc/crc.c               -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Imap_range  -c map_range/map_range.c   -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Imedian     -c median/median.c         -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ithrottle   -c throttle/throttle.c     -o /dev/null
 	@echo "strict: OK"
 
 clean:

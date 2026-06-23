@@ -15,6 +15,11 @@
 #include "button.h"
 #include "dht.h"
 #include "pwm_dimmer.h"
+#include "hysteresis.h"
+#include "crc.h"
+#include "map_range.h"
+#include "median.h"
+#include "throttle.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -127,4 +132,19 @@ void app_main(void)
     (void) pwm_dimmer_init(&dim, GPIO_NUM_14, 1000);
     (void) pwm_dimmer_set(&dim, 50);
     ESP_LOGI(TAG, "dimmer set");
+
+    /* L1 extras compile-gate. */
+    hysteresis hy;
+    hysteresis_init(&hy, 20, 25, false);
+    (void) hysteresis_update(&hy, 22);
+    uint8_t crcbuf[3] = {1, 2, 3};
+    (void) crc8_maxim(crcbuf, 3);
+    (void) crc16_modbus(crcbuf, 3);
+    (void) map_range(512, 0, 1023, 0, 100);
+    (void) clamp_i32(150, 0, 100);
+    (void) median3(1, 2, 3);
+    throttle th;
+    throttle_init(&th, 1000);
+    (void) throttle_allow(&th, 0);
+    ESP_LOGI(TAG, "l1 extras linked");
 }
