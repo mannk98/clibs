@@ -21,6 +21,7 @@
 #include "median.h"
 #include "throttle.h"
 #include "adc_a0.h"
+#include "i2c_bus.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -158,4 +159,11 @@ void app_main(void)
     int32_t aval = 0;
     (void) adc_a0_read_ema(&af, &aval);
     ESP_LOGI(TAG, "adc raw=%u smoothed=%d", (unsigned) araw, (int) aval);
+
+    /* i2c_bus compile-gate. */
+    (void) i2c_bus_init(GPIO_NUM_4, GPIO_NUM_5);
+    uint8_t i2cbuf[2] = {0};
+    (void) i2c_bus_write_reg(0x76, 0xF4, i2cbuf, 1);
+    (void) i2c_bus_read_reg(0x76, 0xFA, i2cbuf, 2);
+    ESP_LOGI(TAG, "i2c reg0=%u", (unsigned) i2cbuf[0]);
 }
