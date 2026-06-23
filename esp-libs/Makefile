@@ -4,8 +4,8 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse strict clean
-test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse
+.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty strict clean
+test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -50,6 +50,11 @@ dht_parse: | $(BUILD)
 	    dht/test_dht_parse.c dht/dht_parse.c $(UNITY)/unity.c
 	./$(BUILD)/test_dht_parse
 
+dimmer_duty: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ipwm_dimmer -o $(BUILD)/test_dimmer_duty \
+	    pwm_dimmer/test_dimmer_duty.c pwm_dimmer/dimmer_duty.c $(UNITY)/unity.c
+	./$(BUILD)/test_dimmer_duty
+
 strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibackoff    -c backoff/backoff.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idebounce   -c debounce/debounce.c     -o /dev/null
@@ -59,6 +64,7 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ijson -c json/json_build.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Irelay -c relay/relay_level.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idht -c dht/dht_parse.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ipwm_dimmer -c pwm_dimmer/dimmer_duty.c -o /dev/null
 	@echo "strict: OK"
 
 clean:

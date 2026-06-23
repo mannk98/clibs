@@ -14,6 +14,7 @@
 #include "relay.h"
 #include "button.h"
 #include "dht.h"
+#include "pwm_dimmer.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -120,4 +121,10 @@ void app_main(void)
     int16_t dht_t = 0, dht_h = 0;
     (void) dht_read(&dh, &dht_t, &dht_h);
     ESP_LOGI(TAG, "dht t=%d h=%d", (int) dht_t, (int) dht_h);
+
+    /* pwm_dimmer compile-gate. */
+    pwm_dimmer dim;
+    (void) pwm_dimmer_init(&dim, GPIO_NUM_14, 1000);
+    (void) pwm_dimmer_set(&dim, 50);
+    ESP_LOGI(TAG, "dimmer set");
 }
