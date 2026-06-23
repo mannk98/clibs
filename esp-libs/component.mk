@@ -1,0 +1,6 @@
+# esp-libs as an ESP8266 RTOS SDK component. Library objects only — the host-only
+# test_*.c files are NOT compiled into firmware (explicit COMPONENT_OBJS).
+COMPONENT_ADD_INCLUDEDIRS := backoff debounce filter mqtt_topic wifi_sta
+COMPONENT_SRCDIRS         := backoff debounce filter mqtt_topic wifi_sta
+COMPONENT_OBJS := backoff/backoff.o debounce/debounce.o filter/filter.o \
+                  mqtt_topic/mqtt_topic.o wifi_sta/wifi_sta.o
