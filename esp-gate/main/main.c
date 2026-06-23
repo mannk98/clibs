@@ -23,6 +23,9 @@
 #include "adc_a0.h"
 #include "i2c_bus.h"
 #include "spi_bus.h"
+#include "ds18b20.h"
+#include "servo.h"
+#include "hcsr04.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -174,4 +177,18 @@ void app_main(void)
     uint8_t spirx[4] = {0};
     (void) spi_bus_transfer(spitx, spirx, 4);
     ESP_LOGI(TAG, "spi id0=%u", (unsigned) spirx[1]);
+
+    /* L3 sensors compile-gate. */
+    ds18b20 ow;
+    (void) ds18b20_init(&ow, GPIO_NUM_2);
+    int32_t owt = 0;
+    (void) ds18b20_read(&ow, &owt);
+    servo sv;
+    (void) servo_init(&sv, GPIO_NUM_14);
+    (void) servo_set(&sv, 90);
+    hcsr04 us;
+    (void) hcsr04_init(&us, GPIO_NUM_12, GPIO_NUM_13);
+    uint32_t usmm = 0;
+    (void) hcsr04_read(&us, &usmm);
+    ESP_LOGI(TAG, "ds18b20=%d hcsr04=%u", (int) owt, (unsigned) usmm);
 }

@@ -4,8 +4,8 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle strict clean
-test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle
+.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist strict clean
+test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -80,6 +80,21 @@ throttle: | $(BUILD)
 	    throttle/test_throttle.c throttle/throttle.c $(UNITY)/unity.c
 	./$(BUILD)/test_throttle
 
+ds18b20_parse: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ids18b20 -Icrc -o $(BUILD)/test_ds18b20_parse \
+	    ds18b20/test_ds18b20_parse.c ds18b20/ds18b20_parse.c crc/crc.c $(UNITY)/unity.c
+	./$(BUILD)/test_ds18b20_parse
+
+servo_duty: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Iservo -o $(BUILD)/test_servo_duty \
+	    servo/test_servo_duty.c servo/servo_duty.c $(UNITY)/unity.c
+	./$(BUILD)/test_servo_duty
+
+hcsr04_dist: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ihcsr04 -o $(BUILD)/test_hcsr04_dist \
+	    hcsr04/test_hcsr04_dist.c hcsr04/hcsr04_dist.c $(UNITY)/unity.c
+	./$(BUILD)/test_hcsr04_dist
+
 strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibackoff    -c backoff/backoff.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idebounce   -c debounce/debounce.c     -o /dev/null
@@ -95,6 +110,9 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Imap_range  -c map_range/map_range.c   -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Imedian     -c median/median.c         -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ithrottle   -c throttle/throttle.c     -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ids18b20 -Icrc -c ds18b20/ds18b20_parse.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Iservo       -c servo/servo_duty.c       -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ihcsr04      -c hcsr04/hcsr04_dist.c     -o /dev/null
 	@echo "strict: OK"
 
 clean:
