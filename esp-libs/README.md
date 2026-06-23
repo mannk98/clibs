@@ -9,7 +9,10 @@ FreeRTOS). Built bottom-up:
   `device_id`, `json`, `periodic`, `mdns_node` — ESP8266-RTOS-SDK glue verified by
   the `esp-gate` link; the pure parts (`device_id_format`, the `json` builder) are
   host-Unity-tested.
-- *Layer 3 — device drivers* (DHT, DS18B20, relay…) — later, needs hardware.
+- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer` —
+  GPIO/PWM/bit-bang glue verified by the `esp-gate` link; the pure parts
+  (`relay_level`, `dht_parse`, `dimmer_duty`) are host-Unity-tested. **Hardware run
+  is deferred** — bit-bang timing (dht) is a first cut to tune on real hardware.
 
 ## Layer-1 libraries
 
@@ -103,6 +106,32 @@ built-in auto-reconnect.
 - `mdns_node_init("node-1")` — start mDNS and set the hostname.
 - `mdns_node_resolve("broker.local", ip, sizeof ip, 1000)` — resolve a host to a
   dotted-quad IP. (Named `mdns_node` to avoid the SDK header `mdns.h`.)
+
+### `relay` — GPIO output actuator
+
+- `relay_init(&r, GPIO_NUM_5, active_low)` / `relay_set(&r, on)` / `relay_toggle(&r)` /
+  `relay_is_on(&r)`. `relay_level(on, active_low)` (pure, host-tested) maps the on-state
+  to the GPIO level.
+
+### `button` — debounced GPIO input
+
+- `button_init(&b, pin, active_low, threshold)` then `button_poll(&b)` at a fixed
+  interval → `BUTTON_PRESSED` / `BUTTON_RELEASED` / `BUTTON_NONE`. Reuses the L1
+  `debounce` FSM. `button_is_pressed(&b)` for the current state.
+
+### `dht` — DHT22 / DHT11 temperature + humidity
+
+- `dht_parse(frame, &temp_dc, &humi_dpct)` (pure, host-tested): a 5-byte frame →
+  deci-°C / deci-%RH with checksum validation.
+- `dht_read(&d, &temp_dc, &humi_dpct)` bit-bangs a read (`ESP_OK` /
+  `ESP_ERR_TIMEOUT` / `ESP_ERR_INVALID_CRC`). The bit-bang timing is a first cut —
+  tune on hardware.
+
+### `pwm_dimmer` — software PWM dimmer
+
+- `pwm_dimmer_init(&d, pin, period_us)` then `pwm_dimmer_set(&d, percent)`.
+  `dimmer_duty(percent, max_duty)` (pure, host-tested) maps 0–100 % to a duty.
+  NOTE: the SDK PWM is a single global subsystem — one dimmer on channel 0.
 
 ### Compile-gate
 
