@@ -22,6 +22,7 @@
 #include "throttle.h"
 #include "adc_a0.h"
 #include "i2c_bus.h"
+#include "spi_bus.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -166,4 +167,11 @@ void app_main(void)
     (void) i2c_bus_write_reg(0x76, 0xF4, i2cbuf, 1);
     (void) i2c_bus_read_reg(0x76, 0xFA, i2cbuf, 2);
     ESP_LOGI(TAG, "i2c reg0=%u", (unsigned) i2cbuf[0]);
+
+    /* spi_bus compile-gate. */
+    (void) spi_bus_init();
+    uint8_t spitx[4] = {0x9F, 0, 0, 0};
+    uint8_t spirx[4] = {0};
+    (void) spi_bus_transfer(spitx, spirx, 4);
+    ESP_LOGI(TAG, "spi id0=%u", (unsigned) spirx[1]);
 }
