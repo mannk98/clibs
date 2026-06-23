@@ -9,8 +9,12 @@
 #include "device_id_get.h"
 #include "json_build.h"
 #include "json_get.h"
+#include "periodic.h"
+#include "mdns_node.h"
 
 static const char *TAG = "esp_libs_gate";
+
+static void gate_tick(void *ctx) { (void) ctx; }
 
 void app_main(void)
 {
@@ -82,4 +86,15 @@ void app_main(void)
     (void) json_get_str("{\"cmd\":\"on\"}", "cmd", cmd, sizeof cmd, "off");
     (void) json_get_int("{\"level\":42}", "level", 0);
     ESP_LOGI(TAG, "payload=%s cmd=%s", payload, cmd);
+
+    /* periodic compile-gate. */
+    periodic pt;
+    (void) periodic_start(&pt, 5000, gate_tick, 0);
+    (void) periodic_stop(&pt);
+
+    /* mdns_node compile-gate. */
+    (void) mdns_node_init("node-1");
+    char bip[16];
+    (void) mdns_node_resolve("broker.local", bip, sizeof bip, 1000);
+    ESP_LOGI(TAG, "broker ip=%s", bip);
 }
