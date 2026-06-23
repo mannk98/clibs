@@ -1,0 +1,30 @@
+name: CI
+
+# Host unit tests for the portable C in clibs (common/ + esp-libs/), built with
+# the runner's gcc — a second compiler beyond the local Apple clang, so it also
+# catches clang-only quirks. The ESP8266 cross-compile gate (xtensa-lx106 SDK)
+# and avr-libs (avr-gcc) are out of scope here; they need toolchains not set up
+# on the runner.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  host-tests:
+    name: Host tests (gcc / ubuntu)
+    runs-on: ubuntu-latest
+    steps:
+      # No submodules: the host tests only use common/third_party/unity, which is
+      # vendored in this repo (avr-libs / esp-idf-template are not needed).
+      - uses: actions/checkout@v4
+
+      - name: common — test + strict
+        run: |
+          make -C common test
+          make -C common strict
+
+      - name: esp-libs — test + strict
+        run: |
+          make -C esp-libs test
+          make -C esp-libs strict
