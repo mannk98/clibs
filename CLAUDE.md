@@ -11,12 +11,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `common/` | clibs's own code (committed here) | portable C99, host GCC | host test executables |
 | `esp-libs/` | clibs's own code (committed here) | **ESP8266** RTOS SDK (xtensa-lx106) + host GCC for L1 | ESP8266 SDK component; host Unity test executables |
 | `esp-gate/` | clibs's own code (committed here) | ESP8266 RTOS SDK (xtensa-lx106), legacy `make` | `esp_libs_gate.elf` (link-only gate, not flashed) |
-| `avr-libs/` | **git submodule** (`mannk98/avr-libs`, branch `main`) | ATmega328p @ 16 MHz, `avr-gcc`/`avr-libc` via Eclipse AVR plugin | static libs (`lib*.a`) |
+| `avr-libs/` | clibs's own code (committed here) | ATmega328p @ 16 MHz, `avr-gcc`/`avr-libc` via Eclipse AVR plugin; host GCC for the extracted pure logic | static libs (`lib*.a`); host Unity test executables |
 | `esp-idf-template/` | **git submodule** (`mannk98/esp-idf-template`, branch `master`) | ESP32 family, ESP-IDF (`idf.py`/CMake or legacy make) | ESP firmware |
 
 **Active focus:** `esp-libs/` — ESP8266 smart-home node building blocks, built bottom-up over cycles (see `docs/superpowers/` plans+specs and git history). The `common/` + `esp-libs/` host tests are what CI runs (`.github/workflows/ci.yml`, gcc/ubuntu); the AVR and xtensa toolchains are out of CI scope.
 
-Submodules are **pinned to a commit** (no branch tracking). Always clone with submodules:
+`esp-idf-template/` is the only remaining submodule (**pinned to a commit**, no branch tracking). Clone with submodules:
 
 ```sh
 git clone --recurse-submodules git@mannk98:mannk98/clibs.git
@@ -25,12 +25,12 @@ git submodule update --init --recursive   # if already cloned without --recurse-
 
 ## Working across the submodule boundary
 
-`common/` is the only code committed directly here. `avr-libs/` and `esp-idf-template/` are independent repos mounted as submodules (their gitdirs live under `.git/modules/<name>`). To change a submodule:
+`common/`, `esp-libs/`, `esp-gate/` and `avr-libs/` are committed directly here. Only `esp-idf-template/` is an independent repo mounted as a submodule (its gitdir lives under `.git/modules/esp-idf-template`). To change it:
 
 1. Commit **and push inside the submodule first** — it has its own remote.
-2. Then in `clibs`: `git add <submodule> && git commit` to record the new pinned commit.
+2. Then in `clibs`: `git add esp-idf-template && git commit` to record the new pinned commit.
 
-After editing a submodule, `git status` in `clibs` shows it as "new commits", not as file diffs.
+After editing the submodule, `git status` in `clibs` shows it as "new commits", not as file diffs. (`avr-libs/` used to be a submodule too; it was absorbed as plain files — its full history still lives in its old remote `mannk98/avr-libs`.)
 
 ## Build & test — `common/` (portable C, host)
 
@@ -86,7 +86,7 @@ cd esp-gate && make defconfig && make -j4   # → build/esp_libs_gate.elf (link-
 
 ## Build — `avr-libs/` (ATmega328p)
 
-No makefiles are committed — the AVR-Eclipse (`de.innot.avreclipse`) plugin generates them. MCU (`atmega328p`) and clock (`F_CPU=16000000UL`) come from each project's `.settings/de.innot.avreclipse.core.prefs`, not the source. **Only two folders are importable Eclipse projects** (full `.cproject`+`.settings`): `arduinoPinMapping` (project `my_avrCore`) and `uartRingbuff` (project `simple-UART-lib`). `adc/`, `encoder/`, `led7segShiftout/` carry only **empty stub** `.project` files; every other folder is loose source needing a fresh project.
+Host-side: a committed `avr-libs/Makefile` builds + runs the **extracted pure logic** as host Unity tests (`make -C avr-libs test` / `strict`, reusing `avr-libs/third_party/unity`) — the `*_decode`/`*_conv`/`*_font`/`*_tick` files split out in the host-test cycles. The **AVR firmware** build has no committed makefiles — the AVR-Eclipse (`de.innot.avreclipse`) plugin generates them. MCU (`atmega328p`) and clock (`F_CPU=16000000UL`) come from each project's `.settings/de.innot.avreclipse.core.prefs`, not the source. **Only two folders are importable Eclipse projects** (full `.cproject`+`.settings`): `arduinoPinMapping` (project `my_avrCore`) and `uartRingbuff` (project `simple-UART-lib`). `adc/`, `encoder/`, `led7segShiftout/` carry only **empty stub** `.project` files; every other folder is loose source needing a fresh project.
 
 ```sh
 # Eclipse: build the Debug/Release config of arduinoPinMapping or uartRingbuff → lib<ProjName>.a

@@ -53,3 +53,6 @@ dkms.conf
 
 # session-handoff scratch (ephemeral, not committed)
 .handoff/
+
+# Eclipse IDE workspace state (not project source) — was accidentally tracked in avr-libs
+.metadata/
