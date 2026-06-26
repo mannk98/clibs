@@ -5,9 +5,10 @@
  */
 #include "fixed.h"
 
-/** Construct a fixed_t from an integer (v << 16). */
+/** Construct a fixed_t from an integer (v scaled by 2^16). */
 fixed_t fixed_from_int(int32_t v) {
-    return (fixed_t)((int64_t)v << FIXED_SHIFT);
+    /* multiply, not `<< FIXED_SHIFT`: left-shifting a negative value is UB (C11 6.5.7p4) */
+    return (fixed_t)((int64_t)v * FIXED_ONE);
 }
 
 /** Integer part of a fixed_t, truncated toward zero (matches an (int) cast). */
@@ -45,7 +46,8 @@ fixed_t fixed_mul(fixed_t a, fixed_t b) {
 /** Divide a by b; uses an int64_t intermediate. b == 0 returns 0. */
 fixed_t fixed_div(fixed_t a, fixed_t b) {
     if (b == 0) return 0;
-    return (fixed_t)(((int64_t)a << FIXED_SHIFT) / (int64_t)b);
+    /* multiply, not `<< FIXED_SHIFT`: a may be negative and left-shifting it is UB */
+    return (fixed_t)(((int64_t)a * FIXED_ONE) / (int64_t)b);
 }
 
 /** Square root of a fixed_t (integer Newton's method); v <= 0 returns 0. */
