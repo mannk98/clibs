@@ -4,8 +4,8 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist strict clean
-test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist
+.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter strict clean
+test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -95,6 +95,11 @@ hcsr04_dist: | $(BUILD)
 	    hcsr04/test_hcsr04_dist.c hcsr04/hcsr04_dist.c $(UNITY)/unity.c
 	./$(BUILD)/test_hcsr04_dist
 
+saturating_counter: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Isaturating_counter -o $(BUILD)/test_saturating_counter \
+	    saturating_counter/test_saturating_counter.c saturating_counter/saturating_counter.c $(UNITY)/unity.c
+	./$(BUILD)/test_saturating_counter
+
 strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibackoff    -c backoff/backoff.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idebounce   -c debounce/debounce.c     -o /dev/null
@@ -113,6 +118,7 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ids18b20 -Icrc -c ds18b20/ds18b20_parse.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Iservo       -c servo/servo_duty.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ihcsr04      -c hcsr04/hcsr04_dist.c     -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Isaturating_counter -c saturating_counter/saturating_counter.c -o /dev/null
 	@echo "strict: OK"
 
 clean:

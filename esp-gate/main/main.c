@@ -26,6 +26,7 @@
 #include "ds18b20.h"
 #include "servo.h"
 #include "hcsr04.h"
+#include "saturating_counter.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -191,4 +192,11 @@ void app_main(void)
     uint32_t usmm = 0;
     (void) hcsr04_read(&us, &usmm);
     ESP_LOGI(TAG, "ds18b20=%d hcsr04=%u", (int) owt, (unsigned) usmm);
+
+    /* saturating_counter compile-gate. */
+    saturating_counter sc;
+    saturating_counter_init(&sc, 0, 10, 0);
+    (void) saturating_counter_inc(&sc);
+    (void) saturating_counter_dec(&sc);
+    ESP_LOGI(TAG, "satcnt=%d", (int) saturating_counter_get(&sc));
 }
