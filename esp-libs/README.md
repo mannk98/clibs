@@ -27,6 +27,7 @@ FreeRTOS). Built bottom-up:
 | `map_range` | Integer linear map + `clamp_i32` (ADC counts → real units). |
 | `median` | `median3` despike (median of three). |
 | `throttle` | Minimum-interval gate (`throttle_init/allow`) for rate-limiting. |
+| `saturating_counter` | Bounded counter over `[min,max]` that clamps instead of wrapping (`saturating_counter_init/inc/dec/get`). |
 
 Each is freestanding (`<stdint.h>`/`<stdbool.h>`/`<stddef.h>`, +`<string.h>` in
 `mqtt_topic`), static / no-malloc, transparent struct + `self`-methods.
@@ -37,7 +38,7 @@ Host unit tests use [Unity](https://github.com/ThrowTheSwitch/Unity), reused fro
 `../common/third_party/unity`.
 
 ```sh
-make test     # build + run all four suites
+make test     # build + run all host suites (18 currently)
 make strict   # -Werror warning gate
 make clean
 ```

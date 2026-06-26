@@ -4,13 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repository is
 
-`clibs` is a **workspace** of reusable C libraries for building IoT/embedded firmware on **ATmega (AVR)** and **ESP (ESP-IDF)** microcontrollers. It is a super-repo of three parts built with three *different* toolchains — there is no single top-level build:
+`clibs` is a **workspace** of reusable C libraries (libraries only — node apps build in their own repos) for building IoT/embedded firmware on **ATmega (AVR)** and **ESP (ESP8266 / ESP-IDF)** microcontrollers. It is a super-repo of several parts built with *different* toolchains — there is no single top-level build:
 
 | Path | Ownership | Platform / toolchain | Produces |
 |------|-----------|----------------------|----------|
 | `common/` | clibs's own code (committed here) | portable C99, host GCC | host test executables |
+| `esp-libs/` | clibs's own code (committed here) | **ESP8266** RTOS SDK (xtensa-lx106) + host GCC for L1 | ESP8266 SDK component; host Unity test executables |
+| `esp-gate/` | clibs's own code (committed here) | ESP8266 RTOS SDK (xtensa-lx106), legacy `make` | `esp_libs_gate.elf` (link-only gate, not flashed) |
 | `avr-libs/` | **git submodule** (`mannk98/avr-libs`, branch `main`) | ATmega328p @ 16 MHz, `avr-gcc`/`avr-libc` via Eclipse AVR plugin | static libs (`lib*.a`) |
 | `esp-idf-template/` | **git submodule** (`mannk98/esp-idf-template`, branch `master`) | ESP32 family, ESP-IDF (`idf.py`/CMake or legacy make) | ESP firmware |
+
+**Active focus:** `esp-libs/` — ESP8266 smart-home node building blocks, built bottom-up over cycles (see `docs/superpowers/` plans+specs and git history). The `common/` + `esp-libs/` host tests are what CI runs (`.github/workflows/ci.yml`, gcc/ubuntu); the AVR and xtensa toolchains are out of CI scope.
 
 Submodules are **pinned to a commit** (no branch tracking). Always clone with submodules:
 
@@ -59,6 +63,26 @@ gcc -std=c99 -Wall -Wno-error=incompatible-function-pointer-types \
 The Eclipse path (`cd common/<lib>.c/Debug && make all`) only succeeds on the original Linux GCC host; on a modern toolchain pass `make CFLAGS='-O0 -g3 -Wall -Wno-error=incompatible-function-pointer-types' all`. `make clean` works everywhere.
 
 To **reuse** a library elsewhere, take only its `src/*.c`+`*.h` (`ringbuffchar` also needs `src/str_utils.c`); `main.c` and `Debug/` are scaffolding. Design conventions shared across all three libs: caller-controlled memory via a `freefunc` passed to `*_init` (`NULL` for literals/stack, `free` for `malloc`'d payloads); typed error enums (`llErrTypes`/`rb_err_t`); a cooperative `isBusy` flag that is **not** real thread-safety.
+
+## Build & test — `esp-libs/` + `esp-gate/` (ESP8266)
+
+`esp-libs/` is the active component: reusable ESP8266 (RTOS SDK, FreeRTOS) blocks in three layers — **L1** pure logic (portable C, host-Unity-tested), **L2** SDK wrappers (`wifi_sta`, `mqtt_node`, `nvs_kv`, `device_id`, `json`, `periodic`, `mdns_node`, `adc_a0`, `i2c_bus`, `spi_bus`), **L3** device drivers (`relay`, `button`, `dht`, `pwm_dimmer`, `ds18b20`, `servo`, `hcsr04`). Each lib is its own folder; the pure part of an L2/L3 lib lives in a separate `*_<noun>.c/.h` (e.g. `dht_parse.c`, `servo_duty.c`) so it can be host-tested apart from the SDK glue. Convention: no-malloc, caller-owned transparent struct + `self`-methods, NULL-guarded, `CLIBS_<MODULE>_H` include guards. **Not yet run on real hardware** — bit-bang/1-Wire timing is a first cut to tune on a chip.
+
+```sh
+make -C esp-libs test      # build + run all host Unity suites (18 currently); each prints "OK"
+make -C esp-libs strict    # -Werror compile gate on every pure .c
+make -C esp-libs clean
+```
+
+Only the pure (L1 + the `*_<noun>` files of L2/L3) code is host-testable. The SDK wrappers need real symbols/FreeRTOS headers, so correctness is proven by the **compile-gate** `esp-gate/` — an ESP8266 SDK app whose `main/main.c` touches one symbol per lib; a clean link (`esp_libs_gate.elf`) means every L2/L3 symbol resolves against the SDK. `esp-libs/` doubles as an ESP8266 SDK component (`component.mk` at its root lists `COMPONENT_OBJS`); adding a new lib means wiring it into both `component.mk` and `esp-gate/main/main.c`.
+
+```sh
+# Needs a separately-installed ESP8266 RTOS SDK + xtensa toolchain (not vendored):
+export PATH="$HOME/esp/xtensa-lx106-elf/bin:$PATH"
+export IDF_PATH="$HOME/esp/ESP8266_RTOS_SDK"
+source ~/esp/idf-venv/bin/activate
+cd esp-gate && make defconfig && make -j4   # → build/esp_libs_gate.elf (link-only; not flashed)
+```
 
 ## Build — `avr-libs/` (ATmega328p)
 

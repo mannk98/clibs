@@ -1,7 +1,7 @@
 # clibs — TODO (việc làm sau)
 
 `clibs` = **thư viện C dùng chung cho IoT** (libraries only). Ứng dụng (node app) build ở **repo riêng**.
-Hiện trạng: `esp-libs` có L1 (pure, host-test) + L2 (SDK wrappers) + L3 (device drivers). `make test` = 17 host suites; ESP8266 compile-gate (`esp-gate`) link sạch. **Chưa chạy thật trên phần cứng.**
+Hiện trạng: `esp-libs` có L1 (pure, host-test) + L2 (SDK wrappers) + L3 (device drivers). `make test` = 18 host suites; ESP8266 compile-gate (`esp-gate`) link sạch. **Chưa chạy thật trên phần cứng.**
 
 Roadmap pre-hardware **A→D→C→B đã xong hết** (xem lịch sử cycle trong git + `docs/superpowers/`).
 
