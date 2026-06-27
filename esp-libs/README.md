@@ -150,10 +150,13 @@ built-in auto-reconnect.
   `i2c_bus_read_reg(addr, reg, data, len)` (7-bit addr, repeated-start read). For
   BME280/OLED/RTC-class devices. Runtime verified on hardware later.
 
-### `spi_bus` — HSPI master
+### `spi_bus` — HSPI master + multi-device software CS
 
-- `spi_bus_init()` then `spi_bus_transfer(tx, rx, len)` (full-duplex, len 1..64;
-  rx NULL for write-only). Runtime verified on hardware later.
+- `spi_bus_init()` disables the single hardware CS, then `spi_bus_transfer(tx, rx, len)`
+  is a raw full-duplex transfer with no CS (len 1..64; rx NULL for write-only).
+- `spi_device_init(&dev, cs_pin)` + `spi_device_transfer(&dev, tx, rx, len)` give each
+  peripheral its own active-low software CS GPIO, so multiple SPI devices share the
+  bus (ESP8266 HSPI has only one hardware CS). Runtime verified on hardware later.
 
 ### `ds18b20` — 1-Wire temperature
 
@@ -203,8 +206,9 @@ built-in auto-reconnect.
 
 ### `max7219` — LED 7-seg / 8×8 matrix (SPI)
 
-- `max7219_frame` + `max7219_digit_segments` (pure, host-tested). `max7219_init` /
-  `max7219_set_digit` / `max7219_set_row` over `spi_bus`.
+- `max7219_frame` + `max7219_digit_segments` (pure, host-tested). `max7219_init(self,
+  cs_pin, intensity)` / `max7219_set_digit` / `max7219_set_row` — each instance owns a
+  software CS GPIO (`spi_device`), so several MAX7219s coexist on the shared `spi_bus`.
 
 ### `rotary` — quadrature encoder
 
