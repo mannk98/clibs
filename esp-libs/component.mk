@@ -4,12 +4,14 @@ COMPONENT_ADD_INCLUDEDIRS := backoff debounce filter mqtt_topic wifi_sta nvs_kv 
                              device_id json periodic mdns_node relay button dht pwm_dimmer \
                              hysteresis crc map_range median throttle adc_a0 i2c_bus spi_bus \
                              ds18b20 servo hcsr04 saturating_counter bme280 ws2812 ir_nec pir \
-                             ssd1306 max7219 rotary stepper hx711 rc5 bh1750 sht3x ds3231
+                             ssd1306 max7219 rotary stepper hx711 rc5 bh1750 sht3x ds3231 \
+                             sk6812 ads1115 ina219
 COMPONENT_SRCDIRS         := backoff debounce filter mqtt_topic wifi_sta nvs_kv mqtt_node \
                              device_id json periodic mdns_node relay button dht pwm_dimmer \
                              hysteresis crc map_range median throttle adc_a0 i2c_bus spi_bus \
                              ds18b20 servo hcsr04 saturating_counter bme280 ws2812 ir_nec pir \
-                             ssd1306 max7219 rotary stepper hx711 rc5 bh1750 sht3x ds3231
+                             ssd1306 max7219 rotary stepper hx711 rc5 bh1750 sht3x ds3231 \
+                             sk6812 ads1115 ina219
 COMPONENT_OBJS := backoff/backoff.o debounce/debounce.o filter/filter.o \
                   mqtt_topic/mqtt_topic.o wifi_sta/wifi_sta.o \
                   nvs_kv/nvs_kv.o mqtt_node/mqtt_node.o \
@@ -38,5 +40,8 @@ COMPONENT_OBJS := backoff/backoff.o debounce/debounce.o filter/filter.o \
                   rc5/rc5.o rc5/rc5_rx.o \
                   bh1750/bh1750.o bh1750/bh1750_dev.o \
                   sht3x/sht3x.o sht3x/sht3x_dev.o \
-                  ds3231/ds3231.o ds3231/ds3231_dev.o
+                  ds3231/ds3231.o ds3231/ds3231_dev.o \
+                  sk6812/sk6812.o sk6812/sk6812_dev.o \
+                  ads1115/ads1115.o ads1115/ads1115_dev.o \
+                  ina219/ina219.o ina219/ina219_dev.o
 COMPONENT_REQUIRES := nvs_flash mqtt mdns json lwip

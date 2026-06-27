@@ -41,6 +41,9 @@
 #include "bh1750_dev.h"
 #include "sht3x_dev.h"
 #include "ds3231_dev.h"
+#include "sk6812_dev.h"
+#include "ads1115_dev.h"
+#include "ina219_dev.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -310,4 +313,37 @@ void app_main(void)
     (void) ds3231_read_temp(&rtc_dev, &rtc_mc);
     ESP_LOGI(TAG, "l3 bh1750/sht3x/ds3231 linked lux=%u t=%d rtc_mc=%d",
              (unsigned) bh_lux, (int) sht_t, (int) rtc_mc);
+
+    /* L3 sk6812/ads1115/ina219 compile-gate (sk6812 bit-bang on a GPIO; ads1115 +
+       ina219 over the shared i2c_bus brought up above). Touch the pure parse/
+       convert symbols + one glue init/op each so the linker pulls in both objects
+       (pure + SDK glue) of every driver. */
+    sk6812_rgbw sk_px = {0};
+    uint8_t sk_buf[4];
+    (void) sk6812_render(&sk_px, 1, 255, sk_buf, sizeof sk_buf);
+    sk6812 sk_dev;
+    (void) sk6812_init(&sk_dev, GPIO_NUM_2, 1, sk_buf, sizeof sk_buf);
+    (void) sk6812_show(&sk_dev, &sk_px, 255);
+
+    (void) ads1115_config(0, ADS1115_PGA_2V048);
+    (void) ads1115_to_microvolts(0, ADS1115_PGA_2V048);
+    ads1115 ads_dev;
+    (void) ads1115_init(&ads_dev, ADS1115_ADDR_GND, ADS1115_PGA_2V048);
+    int32_t ads_uv = 0;
+    (void) ads1115_read(&ads_dev, 0, &ads_uv);
+
+    (void) ina219_bus_mv(0);
+    (void) ina219_shunt_uv(0);
+    (void) ina219_current_ua(0, 100);
+    (void) ina219_power_uw(0, 100);
+    (void) ina219_calibration(100, 100);
+    ina219 ina_dev;
+    (void) ina219_init(&ina_dev, INA219_ADDR, 100, 2000);
+    int32_t ina_bus_mv = 0, ina_shunt_uv = 0, ina_current_ua = 0, ina_power_uw = 0;
+    (void) ina219_read_bus_mv(&ina_dev, &ina_bus_mv);
+    (void) ina219_read_shunt_uv(&ina_dev, &ina_shunt_uv);
+    (void) ina219_read_current_ua(&ina_dev, &ina_current_ua);
+    (void) ina219_read_power_uw(&ina_dev, &ina_power_uw);
+    ESP_LOGI(TAG, "l3 sk6812/ads1115/ina219 linked uv=%d bus_mv=%d",
+             (int) ads_uv, (int) ina_bus_mv);
 }
