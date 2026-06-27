@@ -38,6 +38,9 @@
 #include "stepper_gpio.h"
 #include "hx711_gpio.h"
 #include "rc5_rx.h"
+#include "bh1750_dev.h"
+#include "sht3x_dev.h"
+#include "ds3231_dev.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -280,4 +283,31 @@ void app_main(void)
     rc5_result rc_r;
     (void) rc5_rx_read(&rc, &rc_r, 100);
     ESP_LOGI(TAG, "l3 stepper/hx711/rc5 linked hx=%d", (int) hx_val);
+
+    /* L3 i2c sensors compile-gate (over the shared i2c_bus brought up above).
+       Touch the pure parse/decode symbols + one glue init/read each so the
+       linker pulls in both objects (pure + SDK glue) of every driver. */
+    uint32_t bh_lux = 0;
+    (void) bh1750_parse((const uint8_t[2]){0}, &bh_lux);
+    bh1750 bh_dev;
+    (void) bh1750_init(&bh_dev, BH1750_ADDR_LOW);
+    (void) bh1750_read(&bh_dev, &bh_lux);
+
+    int32_t sht_t = 0, sht_h = 0;
+    (void) sht3x_parse((const uint8_t[6]){0}, &sht_t, &sht_h);
+    sht3x sht_dev;
+    (void) sht3x_init(&sht_dev, SHT3X_ADDR_LOW);
+    (void) sht3x_read(&sht_dev, &sht_t, &sht_h);
+
+    ds3231_time rtc_t = {0};
+    uint8_t rtc_raw[7] = {0};
+    (void) ds3231_decode(rtc_raw, &rtc_t);
+    (void) ds3231_encode(&rtc_t, rtc_raw);
+    int32_t rtc_mc = ds3231_temp_mc(0, 0);
+    ds3231 rtc_dev;
+    (void) ds3231_init(&rtc_dev, DS3231_ADDR);
+    (void) ds3231_get(&rtc_dev, &rtc_t);
+    (void) ds3231_read_temp(&rtc_dev, &rtc_mc);
+    ESP_LOGI(TAG, "l3 bh1750/sht3x/ds3231 linked lux=%u t=%d rtc_mc=%d",
+             (unsigned) bh_lux, (int) sht_t, (int) rtc_mc);
 }
