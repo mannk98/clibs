@@ -183,11 +183,14 @@ void app_main(void)
     (void) i2c_bus_read_reg(0x76, 0xFA, i2cbuf, 2);
     ESP_LOGI(TAG, "i2c reg0=%u", (unsigned) i2cbuf[0]);
 
-    /* spi_bus compile-gate. */
+    /* spi_bus compile-gate: raw bus transfer + a software-CS spi_device. */
     (void) spi_bus_init();
     uint8_t spitx[4] = {0x9F, 0, 0, 0};
     uint8_t spirx[4] = {0};
     (void) spi_bus_transfer(spitx, spirx, 4);
+    spi_device spidev;
+    (void) spi_device_init(&spidev, GPIO_NUM_15);
+    (void) spi_device_transfer(&spidev, spitx, spirx, 4);
     ESP_LOGI(TAG, "spi id0=%u", (unsigned) spirx[1]);
 
     /* L3 sensors compile-gate. */
@@ -248,7 +251,7 @@ void app_main(void)
     uint8_t mx_frame[2];
     max7219 mx;
     max7219_frame(0x01, max7219_digit_segments(8, true), mx_frame);
-    (void) max7219_init(&mx, 8);
+    (void) max7219_init(&mx, GPIO_NUM_15, 8);
 
     rotary_gpio knob;
     (void) rotary_gpio_init(&knob, GPIO_NUM_12, GPIO_NUM_13);

@@ -13,7 +13,7 @@ esp_err_t spi_bus_init(void)
     cfg.interface.val = 0;
     cfg.interface.mosi_en = 1;
     cfg.interface.miso_en = 1;
-    cfg.interface.cs_en = 1;
+    cfg.interface.cs_en = 0;   /* software CS per device (see spi_device) */
     cfg.intr_enable.val = 0;
     cfg.event_cb = NULL;
     cfg.mode = SPI_MASTER_MODE;
@@ -41,5 +41,32 @@ esp_err_t spi_bus_transfer(const uint8_t *tx, uint8_t *rx, size_t len)
     if (err == ESP_OK && rx != NULL) {
         memcpy(rx, miso, len);
     }
+    return err;
+}
+
+esp_err_t spi_device_init(spi_device *self, gpio_num_t cs_pin)
+{
+    if (self == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    self->cs_pin = cs_pin;
+    esp_err_t err = gpio_set_direction(cs_pin, GPIO_MODE_OUTPUT);
+    if (err != ESP_OK) {
+        return err;
+    }
+    return gpio_set_level(cs_pin, 1);   /* idle HIGH (active-low CS deasserted) */
+}
+
+esp_err_t spi_device_transfer(spi_device *self, const uint8_t *tx, uint8_t *rx, size_t len)
+{
+    if (self == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+    esp_err_t err = gpio_set_level(self->cs_pin, 0);   /* assert CS */
+    if (err != ESP_OK) {
+        return err;
+    }
+    err = spi_bus_transfer(tx, rx, len);
+    gpio_set_level(self->cs_pin, 1);                   /* always deassert CS */
     return err;
 }
