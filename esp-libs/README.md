@@ -9,9 +9,9 @@ FreeRTOS). Built bottom-up:
   `device_id`, `json`, `periodic`, `mdns_node`, `adc_a0`, `i2c_bus`, `spi_bus` — ESP8266-RTOS-SDK glue verified by
   the `esp-gate` link; the pure parts (`device_id_format`, the `json` builder) are
   host-Unity-tested.
-- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer`, `ds18b20`, `servo`, `hcsr04`, `bme280`, `ws2812`, `ir_nec`, `pir` —
-  GPIO/PWM/bit-bang/I2C glue verified by the `esp-gate` link; the pure parts
-  (`relay_level`, `dht_parse`, `dimmer_duty`, `bme280_parse`/`bme280_compensate`, `ws2812_render`, `ir_nec_decode`, `pir` FSM) are host-Unity-tested. **Hardware run
+- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer`, `ds18b20`, `servo`, `hcsr04`, `bme280`, `ws2812`, `ir_nec`, `pir`, `ssd1306`, `max7219`, `rotary` —
+  GPIO/PWM/bit-bang/I2C/SPI glue verified by the `esp-gate` link; the pure parts
+  (`relay_level`, `dht_parse`, `dimmer_duty`, `bme280_parse`/`bme280_compensate`, `ws2812_render`, `ir_nec_decode`, `pir` FSM, `ssd1306_fb`, `max7219_encode`, `rotary` decode) are host-Unity-tested. **Hardware run
   is deferred** — bit-bang timing (dht, ws2812, ir_nec) is a first cut to tune on real hardware.
 
 ## Layer-1 libraries
@@ -38,7 +38,7 @@ Host unit tests use [Unity](https://github.com/ThrowTheSwitch/Unity), reused fro
 `../common/third_party/unity`.
 
 ```sh
-make test     # build + run all host suites (22 currently)
+make test     # build + run all host suites (25 currently)
 make strict   # -Werror warning gate
 make clean
 ```
@@ -195,6 +195,21 @@ built-in auto-reconnect.
 
 - `pir_init` + `pir_update(raw, now_ms)` (pure, host-tested): retrigger/hold FSM → PIR_MOTION_START/END.
   `pir_gpio_init/_poll` read the pin + run the FSM.
+
+### `ssd1306` — 128×64 OLED (I2C)
+
+- `ssd1306_fb_*` (pure, host-tested): 1bpp page framebuffer (set/get/fill/clear pixel).
+  `ssd1306_init` + `ssd1306_show` drive the panel over `i2c_bus`.
+
+### `max7219` — LED 7-seg / 8×8 matrix (SPI)
+
+- `max7219_frame` + `max7219_digit_segments` (pure, host-tested). `max7219_init` /
+  `max7219_set_digit` / `max7219_set_row` over `spi_bus`.
+
+### `rotary` — quadrature encoder
+
+- `rotary_init` + `rotary_update` (pure, host-tested): table-driven quarter-step decode → CW/CCW + position.
+  `rotary_gpio_init` / `rotary_gpio_poll` read the A/B pins.
 
 ### Compile-gate
 

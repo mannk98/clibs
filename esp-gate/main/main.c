@@ -31,6 +31,9 @@
 #include "ws2812.h"
 #include "ir_nec_rx.h"
 #include "pir_gpio.h"
+#include "ssd1306.h"
+#include "max7219.h"
+#include "rotary_gpio.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -231,4 +234,19 @@ void app_main(void)
     pir_gpio pir_dev;
     (void) pir_gpio_init(&pir_dev, GPIO_NUM_5, 1000, true);
     ESP_LOGI(TAG, "l3 ws2812/ir_nec/pir linked");
+
+    /* L3 ssd1306/max7219/rotary compile-gate. Touch the pure symbols + one glue
+       init each so the linker pulls in both objects of every driver. */
+    uint8_t oled_buf[SSD1306_FB_BYTES(128, 64)];
+    ssd1306 oled;
+    (void) ssd1306_init(&oled, SSD1306_ADDR, oled_buf, 128, 64);
+
+    uint8_t mx_frame[2];
+    max7219 mx;
+    max7219_frame(0x01, max7219_digit_segments(8, true), mx_frame);
+    (void) max7219_init(&mx, 8);
+
+    rotary_gpio knob;
+    (void) rotary_gpio_init(&knob, GPIO_NUM_12, GPIO_NUM_13);
+    ESP_LOGI(TAG, "l3 ssd1306/max7219/rotary linked");
 }

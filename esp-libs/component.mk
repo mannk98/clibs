@@ -3,11 +3,13 @@
 COMPONENT_ADD_INCLUDEDIRS := backoff debounce filter mqtt_topic wifi_sta nvs_kv mqtt_node \
                              device_id json periodic mdns_node relay button dht pwm_dimmer \
                              hysteresis crc map_range median throttle adc_a0 i2c_bus spi_bus \
-                             ds18b20 servo hcsr04 saturating_counter bme280 ws2812 ir_nec pir
+                             ds18b20 servo hcsr04 saturating_counter bme280 ws2812 ir_nec pir \
+                             ssd1306 max7219 rotary
 COMPONENT_SRCDIRS         := backoff debounce filter mqtt_topic wifi_sta nvs_kv mqtt_node \
                              device_id json periodic mdns_node relay button dht pwm_dimmer \
                              hysteresis crc map_range median throttle adc_a0 i2c_bus spi_bus \
-                             ds18b20 servo hcsr04 saturating_counter bme280 ws2812 ir_nec pir
+                             ds18b20 servo hcsr04 saturating_counter bme280 ws2812 ir_nec pir \
+                             ssd1306 max7219 rotary
 COMPONENT_OBJS := backoff/backoff.o debounce/debounce.o filter/filter.o \
                   mqtt_topic/mqtt_topic.o wifi_sta/wifi_sta.o \
                   nvs_kv/nvs_kv.o mqtt_node/mqtt_node.o \
@@ -27,5 +29,8 @@ COMPONENT_OBJS := backoff/backoff.o debounce/debounce.o filter/filter.o \
                   bme280/bme280.o bme280/bme280_parse.o \
                   ws2812/ws2812_render.o ws2812/ws2812.o \
                   ir_nec/ir_nec.o ir_nec/ir_nec_rx.o \
-                  pir/pir.o pir/pir_gpio.o
+                  pir/pir.o pir/pir_gpio.o \
+                  ssd1306/ssd1306_fb.o ssd1306/ssd1306.o \
+                  max7219/max7219_encode.o max7219/max7219.o \
+                  rotary/rotary.o rotary/rotary_gpio.o
 COMPONENT_REQUIRES := nvs_flash mqtt mdns json lwip
