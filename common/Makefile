@@ -4,8 +4,8 @@ CFLAGS  := -std=c11 -Wall -Wextra -g
 UNITY   := third_party/unity
 BUILD   := build
 
-.PHONY: test str_utils ringbuf dll log bitset mempool fixed crc fsm strict clean
-test: str_utils ringbuf dll log bitset mempool fixed crc fsm
+.PHONY: test str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 strict clean
+test: str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -55,6 +55,31 @@ fsm: | $(BUILD)
 	    fsm/test_fsm.c fsm/fsm.c $(UNITY)/unity.c
 	./$(BUILD)/test_fsm
 
+vec: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ivec -o $(BUILD)/test_vec \
+	    vec/test_vec.c vec/vec.c $(UNITY)/unity.c
+	./$(BUILD)/test_vec
+
+pqueue: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ipqueue -o $(BUILD)/test_pqueue \
+	    pqueue/test_pqueue.c pqueue/pqueue.c $(UNITY)/unity.c
+	./$(BUILD)/test_pqueue
+
+rng: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Irng -o $(BUILD)/test_rng \
+	    rng/test_rng.c rng/rng.c $(UNITY)/unity.c
+	./$(BUILD)/test_rng
+
+hex: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ihex -o $(BUILD)/test_hex \
+	    hex/test_hex.c hex/hex.c $(UNITY)/unity.c
+	./$(BUILD)/test_hex
+
+base64: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ibase64 -o $(BUILD)/test_base64 \
+	    base64/test_base64.c base64/base64.c $(UNITY)/unity.c
+	./$(BUILD)/test_base64
+
 # Strict compile gate: reusable libs must be warning-clean under -Werror.
 # log is compiled WITHOUT -Werror (third-party style) but WITH color disabled
 # to exercise its non-color branch (catches the tag bug).
@@ -68,6 +93,11 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ifixed   -c fixed/fixed.c     -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Icrc     -c crc/crc.c         -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ifsm     -c fsm/fsm.c         -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ivec     -c vec/vec.c         -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ipqueue  -c pqueue/pqueue.c   -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Irng     -c rng/rng.c         -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ihex     -c hex/hex.c         -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ibase64  -c base64/base64.c   -o /dev/null
 	@echo "strict: OK"
 
 clean:
