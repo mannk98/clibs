@@ -99,7 +99,7 @@ bool bme280_compensate(const bme280_calib *cal, int32_t adc_T, int32_t adc_P,
     /* Humidity (Bosch BME280_compensate_H_int32), result Q22.10 %RH. */
     int32_t h;
     h = t_fine - 76800;
-    h = ((((adc_H << 14) - ((int32_t) cal->H4 * 1048576) - (((int32_t) cal->H5) * h)) +
+    h = ((((adc_H * 16384) - ((int32_t) cal->H4 * 1048576) - (((int32_t) cal->H5) * h)) +
           16384) >> 15) *
         (((((((h * ((int32_t) cal->H6)) >> 10) *
              (((h * ((int32_t) cal->H3)) >> 11) + 32768)) >> 10) + 2097152) *
