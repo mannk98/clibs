@@ -4,8 +4,8 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 strict sanitize clean
-test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text max7219_encode rotary stepper rc5 hx711 bh1750 ds3231
+.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 sht3x strict sanitize clean
+test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 sht3x
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -165,6 +165,11 @@ ds3231: | $(BUILD)
 	    ds3231/test_ds3231.c ds3231/ds3231.c $(UNITY)/unity.c
 	./$(BUILD)/test_ds3231
 
+sht3x: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Isht3x -o $(BUILD)/test_sht3x \
+	    sht3x/test_sht3x.c sht3x/sht3x.c $(UNITY)/unity.c
+	./$(BUILD)/test_sht3x
+
 strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibackoff    -c backoff/backoff.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idebounce   -c debounce/debounce.c     -o /dev/null
@@ -197,6 +202,7 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ihx711  -c hx711/hx711.c            -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibh1750 -c bh1750/bh1750.c          -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ids3231 -c ds3231/ds3231.c          -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Isht3x -c sht3x/sht3x.c -o /dev/null
 	@echo "strict: OK"
 
 # Sanitizer gate: rebuild + run every host suite under UBSan + ASan. Catches UB
