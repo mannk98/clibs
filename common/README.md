@@ -25,13 +25,20 @@ cross-compile for AVR unchanged.
 | `rng`       | `rng/`        | xorshift32 PRNG — a small stateful object (`seed`/`next`/`below`), deterministic from a seed. |
 | `hex`       | `hex/`        | Hex encode/decode (stateless functions); lowercase encode, upper/lower decode. |
 | `base64`    | `base64/`     | Base64 (RFC 4648) encode/decode (stateless functions) with `=` padding. |
+| `hashmap`   | `hashmap/`    | Open-addressing `const char*`→`void*` map (FNV-1a + linear probing + tombstones) over a caller entry array (caller-storage object). |
+| `stats`     | `stats/`      | Streaming min/max/mean/population-variance (Welford online, `float`, no `<math.h>`) — a small stateful object. |
+| `cobs`      | `cobs/`       | Consistent Overhead Byte Stuffing encode/decode (stateless functions); zero-free output, no trailing `0x00` delimiter (caller owns framing). |
+| `scheduler` | `scheduler/`  | Cooperative tick-driven task scheduler over a caller slot array (caller-storage object); task fn-ptr callback with explicit `void *ctx`. |
+| `event`     | `event/`      | Publish/subscribe bus over a caller subscription array (caller-storage object); handler fn-ptr callback `(event_id, data, ctx)` with explicit `ctx`. |
 
 `crc` (stateless functions) and `fixed` (a value type like `int`) are not
 `self`-objects — the OOP struct+method convention applies only to the stateful
-libs (`dll`, `ringbuf`, `bitset`, `mempool`, `fsm`, `vec`, `pqueue`, `rng`).
-`hex` and `base64` are likewise stateless functions, not `self`-objects. `crc`
-is the canonical home for these checksums; `esp-libs/crc` will be de-duped to
-re-export it later.
+libs (`dll`, `ringbuf`, `bitset`, `mempool`, `fsm`, `vec`, `pqueue`, `rng`,
+`stats`, `hashmap`, `scheduler`, `event`). `hex`, `base64` and `cobs` are
+likewise stateless functions, not `self`-objects. `scheduler` and `event` take
+**explicit user callbacks** (a task/handler fn-ptr plus a `void *ctx`), not
+vtable polymorphism. `crc` is the canonical home for these checksums;
+`esp-libs/crc` will be de-duped to re-export it later.
 
 ## Reusing a library
 
@@ -55,7 +62,7 @@ Host unit tests use [Unity](https://github.com/ThrowTheSwitch/Unity) (vendored
 under `third_party/unity/`).
 
 ```sh
-make test     # build + run all suites (str_utils, ringbuf, dll, log, bitset, mempool, fixed, crc, fsm, vec, pqueue, rng, hex, base64)
+make test     # build + run all suites (str_utils, ringbuf, dll, log, bitset, mempool, fixed, crc, fsm, vec, pqueue, rng, hex, base64, hashmap, stats, cobs, scheduler, event)
 make strict   # warning-clean compile gate (-Werror) for the reusable libs
 make clean
 ```

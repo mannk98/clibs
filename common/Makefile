@@ -4,8 +4,8 @@ CFLAGS  := -std=c11 -Wall -Wextra -g
 UNITY   := third_party/unity
 BUILD   := build
 
-.PHONY: test str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 strict clean
-test: str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64
+.PHONY: test str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 hashmap stats cobs scheduler event strict clean
+test: str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 hashmap stats cobs scheduler event
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -80,6 +80,31 @@ base64: | $(BUILD)
 	    base64/test_base64.c base64/base64.c $(UNITY)/unity.c
 	./$(BUILD)/test_base64
 
+hashmap: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ihashmap -o $(BUILD)/test_hashmap \
+	    hashmap/test_hashmap.c hashmap/hashmap.c $(UNITY)/unity.c
+	./$(BUILD)/test_hashmap
+
+stats: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Istats -o $(BUILD)/test_stats \
+	    stats/test_stats.c stats/stats.c $(UNITY)/unity.c
+	./$(BUILD)/test_stats
+
+cobs: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Icobs -o $(BUILD)/test_cobs \
+	    cobs/test_cobs.c cobs/cobs.c $(UNITY)/unity.c
+	./$(BUILD)/test_cobs
+
+scheduler: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ischeduler -o $(BUILD)/test_scheduler \
+	    scheduler/test_scheduler.c scheduler/scheduler.c $(UNITY)/unity.c
+	./$(BUILD)/test_scheduler
+
+event: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ievent -o $(BUILD)/test_event \
+	    event/test_event.c event/event.c $(UNITY)/unity.c
+	./$(BUILD)/test_event
+
 # Strict compile gate: reusable libs must be warning-clean under -Werror.
 # log is compiled WITHOUT -Werror (third-party style) but WITH color disabled
 # to exercise its non-color branch (catches the tag bug).
@@ -98,6 +123,11 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Irng     -c rng/rng.c         -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ihex     -c hex/hex.c         -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibase64  -c base64/base64.c   -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ihashmap   -c hashmap/hashmap.c     -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Istats     -c stats/stats.c         -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Icobs      -c cobs/cobs.c           -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ischeduler -c scheduler/scheduler.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ievent     -c event/event.c         -o /dev/null
 	@echo "strict: OK"
 
 clean:
