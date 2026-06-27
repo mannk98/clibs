@@ -234,6 +234,23 @@ built-in auto-reconnect.
   on-chip temperature. `ds3231_init` / `ds3231_get` / `ds3231_set` / `ds3231_read_temp`
   over `i2c_bus` (register-mapped).
 
+### `sk6812` — RGBW addressable LED
+
+- `sk6812_render` (pure, host-tested): pack RGBW pixels into a brightness-scaled GRBW
+  byte buffer. `sk6812_init` / `sk6812_show` bit-bang the strip (32 bits/pixel).
+
+### `ads1115` — 16-bit 4-channel ADC (I2C)
+
+- `ads1115_to_microvolts` + `ads1115_config` (pure, host-tested): PGA-scaled µV
+  conversion (int64 widen) + single-shot config word. `ads1115_init` /
+  `ads1115_read(channel)` over `i2c_bus`.
+
+### `ina219` — current / power monitor (I2C)
+
+- `ina219_bus_mv` / `ina219_shunt_uv` / `ina219_current_ua` / `ina219_power_uw` /
+  `ina219_calibration` (pure, host-tested). `ina219_init(shunt, maxI)` +
+  `ina219_read_*` over `i2c_bus`.
+
 ### Compile-gate
 
 L2 wrappers require the real SDK (symbol resolution, FreeRTOS headers). They
