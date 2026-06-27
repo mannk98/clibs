@@ -1,3 +1,7 @@
+/* Host smoke-test of the esp-libs/crc re-export: includes "crc.h" (the shim ->
+ * common/crc) and links crc/crc.c (the forwarder -> common/crc/crc.c), so a
+ * green run proves the re-export wiring resolves to the canonical impl and still
+ * matches the catalogue check values. (The full crc test suite is common/crc.) */
 #include "unity.h"
 #include "crc.h"
 

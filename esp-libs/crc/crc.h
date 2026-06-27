@@ -1,13 +1,18 @@
-#ifndef CLIBS_CRC_H
-#define CLIBS_CRC_H
+#ifndef CLIBS_ESP_LIBS_CRC_H
+#define CLIBS_ESP_LIBS_CRC_H
 
-#include <stdint.h>
-#include <stddef.h>
+/* Re-export shim: esp-libs/crc now forwards to the canonical common/crc.
+ *
+ * crc8_maxim + crc16_modbus are byte-for-byte identical to the former local
+ * copy (same reflected polys/inits); common/crc additionally exposes
+ * crc16_ccitt + crc32. Consumers keep `#include "crc.h"` unchanged — the only
+ * visible difference is the parameter type widened to `const void *` (a
+ * `const uint8_t *` argument converts implicitly, so existing call sites such
+ * as ds18b20 / esp-gate are unaffected).
+ *
+ * NOTE: a DISTINCT guard (CLIBS_ESP_LIBS_CRC_H) is used here on purpose — the
+ * common header guards with CLIBS_CRC_H, so defining that here would suppress
+ * common's declarations. The relative include resolves to clibs/common/crc/. */
+#include "../../common/crc/crc.h"
 
-/* CRC-8/MAXIM (Dallas/Maxim 1-Wire): reflected poly 0x8C, init 0x00. For DS18B20 etc.
- * NULL data -> returns the init value 0x00. */
-uint8_t crc8_maxim(const uint8_t *data, size_t len);
-/* CRC-16/MODBUS: reflected poly 0xA001, init 0xFFFF. NULL data -> returns 0xFFFF. */
-uint16_t crc16_modbus(const uint8_t *data, size_t len);
-
-#endif /* CLIBS_CRC_H */
+#endif /* CLIBS_ESP_LIBS_CRC_H */

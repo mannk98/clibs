@@ -23,7 +23,7 @@ FreeRTOS). Built bottom-up:
 | `filter` | Integer EMA smoothing for ADC (`ema_init/update`, alpha = 1/2^shift, no floats). |
 | `mqtt_topic` | Topic join + MQTT `+`/`#` wildcard match (`mqtt_topic_join/match`). |
 | `hysteresis` | Schmitt-trigger deadband on/off control (`hysteresis_init/update/state`). |
-| `crc` | `crc8_maxim` (1-Wire) + `crc16_modbus` checksums. |
+| `crc` | `crc8_maxim` (1-Wire) + `crc16_modbus` checksums — **re-exports `common/crc`** (single source of truth; also brings `crc16_ccitt`/`crc32`). |
 | `map_range` | Integer linear map + `clamp_i32` (ADC counts → real units). |
 | `median` | `median3` despike (median of three). |
 | `throttle` | Minimum-interval gate (`throttle_init/allow`) for rate-limiting. |

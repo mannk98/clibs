@@ -41,7 +41,8 @@ libs (`dll`, `ringbuf`, `bitset`, `mempool`, `fsm`, `vec`, `pqueue`, `rng`,
 likewise stateless functions, not `self`-objects. `scheduler` and `event` take
 **explicit user callbacks** (a task/handler fn-ptr plus a `void *ctx`), not
 vtable polymorphism. `crc` is the canonical home for these checksums;
-`esp-libs/crc` will be de-duped to re-export it later.
+`esp-libs/crc` re-exports it (a thin shim + forwarder over `common/crc`), so the
+algorithm has a single source of truth here.
 
 ## Reusing a library
 
