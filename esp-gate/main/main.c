@@ -28,6 +28,9 @@
 #include "hcsr04.h"
 #include "saturating_counter.h"
 #include "bme280.h"
+#include "ws2812.h"
+#include "ir_nec_rx.h"
+#include "pir_gpio.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -210,4 +213,22 @@ void app_main(void)
     bme280 bme_dev;
     (void) bme280_init(&bme_dev, BME280_ADDR_PRIMARY);
     ESP_LOGI(TAG, "bme280 temp_mc=%d", (int) bme_r.temp_mc);
+
+    /* L3 ws2812/ir_nec/pir compile-gate. Touch the pure symbols + one glue init
+       each so the linker pulls in both objects of every driver. */
+    ws2812_rgb ws_px = {0};
+    uint8_t ws_buf[3];
+    ws2812 ws_dev;
+    (void) ws2812_render(&ws_px, 1, 255, ws_buf, sizeof ws_buf);
+    (void) ws2812_init(&ws_dev, GPIO_NUM_2, 1, ws_buf, sizeof ws_buf);
+
+    uint16_t ir_us[66] = {0};
+    ir_nec_result ir_r;
+    ir_nec_rx ir_dev;
+    (void) ir_nec_decode(ir_us, 66, &ir_r);
+    (void) ir_nec_rx_init(&ir_dev, GPIO_NUM_4);
+
+    pir_gpio pir_dev;
+    (void) pir_gpio_init(&pir_dev, GPIO_NUM_5, 1000, true);
+    ESP_LOGI(TAG, "l3 ws2812/ir_nec/pir linked");
 }

@@ -4,8 +4,8 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec strict sanitize clean
-test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec
+.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir strict sanitize clean
+test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -115,6 +115,11 @@ ir_nec: | $(BUILD)
 	    ir_nec/test_ir_nec.c ir_nec/ir_nec.c $(UNITY)/unity.c
 	./$(BUILD)/test_ir_nec
 
+pir: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Ipir -o $(BUILD)/test_pir \
+	    pir/test_pir.c pir/pir.c $(UNITY)/unity.c
+	./$(BUILD)/test_pir
+
 strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibackoff    -c backoff/backoff.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idebounce   -c debounce/debounce.c     -o /dev/null
@@ -137,6 +142,7 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibme280 -c bme280/bme280_parse.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Iws2812 -c ws2812/ws2812_render.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Iir_nec -c ir_nec/ir_nec.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Ipir    -c pir/pir.c               -o /dev/null
 	@echo "strict: OK"
 
 # Sanitizer gate: rebuild + run every host suite under UBSan + ASan. Catches UB

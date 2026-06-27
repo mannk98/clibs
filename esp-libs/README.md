@@ -9,10 +9,10 @@ FreeRTOS). Built bottom-up:
   `device_id`, `json`, `periodic`, `mdns_node`, `adc_a0`, `i2c_bus`, `spi_bus` — ESP8266-RTOS-SDK glue verified by
   the `esp-gate` link; the pure parts (`device_id_format`, the `json` builder) are
   host-Unity-tested.
-- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer`, `ds18b20`, `servo`, `hcsr04`, `bme280` —
+- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer`, `ds18b20`, `servo`, `hcsr04`, `bme280`, `ws2812`, `ir_nec`, `pir` —
   GPIO/PWM/bit-bang/I2C glue verified by the `esp-gate` link; the pure parts
-  (`relay_level`, `dht_parse`, `dimmer_duty`, `bme280_parse`/`bme280_compensate`) are host-Unity-tested. **Hardware run
-  is deferred** — bit-bang timing (dht) is a first cut to tune on real hardware.
+  (`relay_level`, `dht_parse`, `dimmer_duty`, `bme280_parse`/`bme280_compensate`, `ws2812_render`, `ir_nec_decode`, `pir` FSM) are host-Unity-tested. **Hardware run
+  is deferred** — bit-bang timing (dht, ws2812, ir_nec) is a first cut to tune on real hardware.
 
 ## Layer-1 libraries
 
@@ -38,7 +38,7 @@ Host unit tests use [Unity](https://github.com/ThrowTheSwitch/Unity), reused fro
 `../common/third_party/unity`.
 
 ```sh
-make test     # build + run all host suites (18 currently)
+make test     # build + run all host suites (22 currently)
 make strict   # -Werror warning gate
 make clean
 ```
@@ -180,6 +180,21 @@ built-in auto-reconnect.
   compensation → SI units (milli-°C / milli-%RH / Pa).
 - `bme280_init(&d, BME280_ADDR_PRIMARY)` then `bme280_read(&d, &r)` — forced-mode
   one-shot over `i2c_bus`. Runtime verified on hardware later.
+
+### `ws2812` — WS2812/NeoPixel RGB
+
+- `ws2812_render(px, n, brightness, out, out_size)` (pure, host-tested): RGB → GRB byte
+  buffer with brightness scaling. `ws2812_init` + `ws2812_show` bit-bang the strip (first cut).
+
+### `ir_nec` — IR remote receive (NEC)
+
+- `ir_nec_decode(us, count, &result)` (pure, host-tested): mark/space durations → address +
+  command (command complement validated; `raw` for extended remotes). `ir_nec_rx_init/_read` capture + decode.
+
+### `pir` — motion sensor
+
+- `pir_init` + `pir_update(raw, now_ms)` (pure, host-tested): retrigger/hold FSM → PIR_MOTION_START/END.
+  `pir_gpio_init/_poll` read the pin + run the FSM.
 
 ### Compile-gate
 
