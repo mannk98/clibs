@@ -4,8 +4,8 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 sht3x strict sanitize clean
-test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 sht3x
+.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 sht3x ina219 sk6812 ads1115 strict sanitize clean
+test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 sht3x ina219 sk6812 ads1115
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -170,6 +170,21 @@ sht3x: | $(BUILD)
 	    sht3x/test_sht3x.c sht3x/sht3x.c $(UNITY)/unity.c
 	./$(BUILD)/test_sht3x
 
+ads1115: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Iads1115 -o $(BUILD)/test_ads1115 \
+	    ads1115/test_ads1115.c ads1115/ads1115.c $(UNITY)/unity.c
+	./$(BUILD)/test_ads1115
+
+ina219: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Iina219 -o $(BUILD)/test_ina219 \
+	    ina219/test_ina219.c ina219/ina219.c $(UNITY)/unity.c
+	./$(BUILD)/test_ina219
+
+sk6812: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Isk6812 -o $(BUILD)/test_sk6812 \
+	    sk6812/test_sk6812.c sk6812/sk6812.c $(UNITY)/unity.c
+	./$(BUILD)/test_sk6812
+
 strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibackoff    -c backoff/backoff.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idebounce   -c debounce/debounce.c     -o /dev/null
@@ -203,6 +218,9 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibh1750 -c bh1750/bh1750.c          -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ids3231 -c ds3231/ds3231.c          -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Isht3x -c sht3x/sht3x.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Iina219 -c ina219/ina219.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Isk6812 -c sk6812/sk6812.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Iads1115 -c ads1115/ads1115.c -o /dev/null
 	@echo "strict: OK"
 
 # Sanitizer gate: rebuild + run every host suite under UBSan + ASan. Catches UB
