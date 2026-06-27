@@ -72,6 +72,23 @@ static void test_bme280_compensate_si_vector(void)
     TEST_ASSERT_EQUAL_UINT32(42743,   r.humi_mrh);  /* 42.743 %RH */
 }
 
+/* Acceptance 3b: high-temperature vector. At a high adc_T, t_fine-128000
+ * (p1) goes positive while P5/P2 are negative, so the pressure terms multiply
+ * to NEGATIVE values — the path that a `<< n` would make UB. Cross-checked
+ * (Bosch int vs double) SI vector; also the UBSan tripwire for that shift. */
+static void test_bme280_compensate_high_temp_vector(void)
+{
+    bme280_calib cal = {0};
+    TEST_ASSERT_TRUE(bme280_parse_calib(CALIB26, CALIBH, &cal));
+
+    bme280_reading r = {0};
+    TEST_ASSERT_TRUE(bme280_compensate(&cal, 700000, 326816, 26083, &r));
+
+    TEST_ASSERT_EQUAL_INT32(77870,   r.temp_mc);   /* 77.87 C */
+    TEST_ASSERT_EQUAL_UINT32(111182,  r.press_pa);  /* 1111.82 hPa */
+    TEST_ASSERT_EQUAL_UINT32(48252,   r.humi_mrh);  /* 48.252 %RH */
+}
+
 /* Acceptance 4a: parse_calib NULL-guards every pointer argument. */
 static void test_bme280_parse_calib_null_guards(void)
 {
@@ -96,6 +113,7 @@ int main(void)
     RUN_TEST(test_bme280_parse_calib_all_fields);
     RUN_TEST(test_bme280_parse_calib_h4_h5_sign_extension);
     RUN_TEST(test_bme280_compensate_si_vector);
+    RUN_TEST(test_bme280_compensate_high_temp_vector);
     RUN_TEST(test_bme280_parse_calib_null_guards);
     RUN_TEST(test_bme280_compensate_null_guards);
     return UNITY_END();

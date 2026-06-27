@@ -78,25 +78,28 @@ bool bme280_compensate(const bme280_calib *cal, int32_t adc_T, int32_t adc_P,
     int64_t p1, p2, p;
     p1 = (int64_t) t_fine - 128000;
     p2 = p1 * p1 * (int64_t) cal->P6;
-    p2 = p2 + ((p1 * (int64_t) cal->P5) << 17);
-    p2 = p2 + (((int64_t) cal->P4) << 35);
-    p1 = ((p1 * p1 * (int64_t) cal->P3) >> 8) + ((p1 * (int64_t) cal->P2) << 12);
+    /* multiply, NOT `<< n`: left-shifting a possibly-negative value is UB
+       (C11 6.5.7p4); x * 2^n is the identical value and well-defined for
+       negatives (p1 and the signed P-coeffs can be negative). */
+    p2 = p2 + ((p1 * (int64_t) cal->P5) * 131072);                /* was << 17 */
+    p2 = p2 + ((int64_t) cal->P4 * ((int64_t) 1 << 35));          /* was << 35 */
+    p1 = ((p1 * p1 * (int64_t) cal->P3) >> 8) + ((p1 * (int64_t) cal->P2) * 4096); /* was << 12 */
     p1 = (((((int64_t) 1) << 47) + p1) * ((int64_t) cal->P1)) >> 33;
     if (p1 == 0) {
         out->press_pa = 0;   /* avoid division by zero */
     } else {
         p = 1048576 - adc_P;
-        p = (((p << 31) - p2) * 3125) / p1;
+        p = (((p * ((int64_t) 1 << 31)) - p2) * 3125) / p1;   /* p<<31 as multiply */
         p1 = (((int64_t) cal->P9) * (p >> 13) * (p >> 13)) >> 25;
         p2 = (((int64_t) cal->P8) * p) >> 19;
-        p = ((p + p1 + p2) >> 8) + (((int64_t) cal->P7) << 4);
+        p = ((p + p1 + p2) >> 8) + ((int64_t) cal->P7 * 16);   /* was << 4 (P7 may be negative) */
         out->press_pa = (uint32_t) ((uint64_t) p >> 8);   /* Q24.8 -> Pa */
     }
 
     /* Humidity (Bosch BME280_compensate_H_int32), result Q22.10 %RH. */
     int32_t h;
     h = t_fine - 76800;
-    h = ((((adc_H << 14) - (((int32_t) cal->H4) << 20) - (((int32_t) cal->H5) * h)) +
+    h = ((((adc_H << 14) - ((int32_t) cal->H4 * 1048576) - (((int32_t) cal->H5) * h)) +
           16384) >> 15) *
         (((((((h * ((int32_t) cal->H6)) >> 10) *
              (((h * ((int32_t) cal->H3)) >> 11) + 32768)) >> 10) + 2097152) *

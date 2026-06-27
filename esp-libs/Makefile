@@ -4,7 +4,7 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse strict clean
+.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse strict sanitize clean
 test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse
 
 $(BUILD):
@@ -126,6 +126,14 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Isaturating_counter -c saturating_counter/saturating_counter.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibme280 -c bme280/bme280_parse.c -o /dev/null
 	@echo "strict: OK"
+
+# Sanitizer gate: rebuild + run every host suite under UBSan + ASan. Catches UB
+# (e.g. left-shift of a negative value in the bme280 Bosch fixed-point math) that
+# `test` and `strict` miss. Carried over from common/Makefile. Target-specific
+# CFLAGS propagate to the `test` prerequisite and its per-lib targets.
+sanitize: CFLAGS += -fsanitize=undefined,address -fno-sanitize-recover=all
+sanitize: test
+	@echo "sanitize: OK"
 
 clean:
 	rm -rf $(BUILD)
