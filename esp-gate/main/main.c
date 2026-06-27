@@ -32,8 +32,12 @@
 #include "ir_nec_rx.h"
 #include "pir_gpio.h"
 #include "ssd1306.h"
+#include "ssd1306_text.h"
 #include "max7219.h"
 #include "rotary_gpio.h"
+#include "stepper_gpio.h"
+#include "hx711_gpio.h"
+#include "rc5_rx.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -249,4 +253,25 @@ void app_main(void)
     rotary_gpio knob;
     (void) rotary_gpio_init(&knob, GPIO_NUM_12, GPIO_NUM_13);
     ESP_LOGI(TAG, "l3 ssd1306/max7219/rotary linked");
+
+    /* ssd1306_text compile-gate: pure 5x7 text layer over the oled framebuffer. */
+    ssd1306_draw_char(&oled.fb, 0, 0, 'A');
+    (void) ssd1306_draw_string(&oled.fb, 0, 8, "hi");
+
+    /* L3 stepper/hx711/rc5 compile-gate. Touch one glue init/op each so the
+       linker pulls in both objects (pure + SDK glue) of every driver. */
+    stepper_gpio st;
+    (void) stepper_gpio_init(&st, GPIO_NUM_5, GPIO_NUM_4, GPIO_NUM_0, GPIO_NUM_2);
+    (void) stepper_gpio_step(&st, true);
+
+    hx711_dev hx;
+    (void) hx711_dev_init(&hx, GPIO_NUM_14, GPIO_NUM_12, HX711_GAIN_A128);
+    int32_t hx_val = 0;
+    (void) hx711_dev_read(&hx, &hx_val, 100);
+
+    rc5_rx rc;
+    (void) rc5_rx_init(&rc, GPIO_NUM_13);
+    rc5_result rc_r;
+    (void) rc5_rx_read(&rc, &rc_r, 100);
+    ESP_LOGI(TAG, "l3 stepper/hx711/rc5 linked hx=%d", (int) hx_val);
 }
