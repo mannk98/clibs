@@ -4,8 +4,8 @@ CFLAGS  := -std=c11 -Wall -Wextra -g
 UNITY   := third_party/unity
 BUILD   := build
 
-.PHONY: test str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 hashmap stats cobs scheduler event strict sanitize clean
-test: str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 hashmap stats cobs scheduler event
+.PHONY: test str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 hashmap stats cobs scheduler event slip tlv softtimer strict sanitize clean
+test: str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 hashmap stats cobs scheduler event slip tlv softtimer
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -105,6 +105,21 @@ event: | $(BUILD)
 	    event/test_event.c event/event.c $(UNITY)/unity.c
 	./$(BUILD)/test_event
 
+slip: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Islip -o $(BUILD)/test_slip \
+	    slip/test_slip.c slip/slip.c $(UNITY)/unity.c
+	./$(BUILD)/test_slip
+
+tlv: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Itlv -o $(BUILD)/test_tlv \
+	    tlv/test_tlv.c tlv/tlv.c $(UNITY)/unity.c
+	./$(BUILD)/test_tlv
+
+softtimer: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Isofttimer -o $(BUILD)/test_softtimer \
+	    softtimer/test_softtimer.c softtimer/softtimer.c $(UNITY)/unity.c
+	./$(BUILD)/test_softtimer
+
 # Strict compile gate: reusable libs must be warning-clean under -Werror.
 # log is compiled WITHOUT -Werror (third-party style) but WITH color disabled
 # to exercise its non-color branch (catches the tag bug).
@@ -128,6 +143,9 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Icobs      -c cobs/cobs.c           -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ischeduler -c scheduler/scheduler.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ievent     -c event/event.c         -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Islip      -c slip/slip.c           -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Itlv       -c tlv/tlv.c             -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Isofttimer -c softtimer/softtimer.c -o /dev/null
 	@echo "strict: OK"
 
 # Sanitizer gate: rebuild + run every suite under UBSan + ASan. Catches UB and
