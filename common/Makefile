@@ -4,7 +4,7 @@ CFLAGS  := -std=c11 -Wall -Wextra -g
 UNITY   := third_party/unity
 BUILD   := build
 
-.PHONY: test str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 hashmap stats cobs scheduler event strict clean
+.PHONY: test str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 hashmap stats cobs scheduler event strict sanitize clean
 test: str_utils ringbuf dll log bitset mempool fixed crc fsm vec pqueue rng hex base64 hashmap stats cobs scheduler event
 
 $(BUILD):
@@ -129,6 +129,14 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ischeduler -c scheduler/scheduler.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ievent     -c event/event.c         -o /dev/null
 	@echo "strict: OK"
+
+# Sanitizer gate: rebuild + run every suite under UBSan + ASan. Catches UB and
+# memory bugs that pass `test` and `strict` (e.g. the batch-1 fixed-point
+# left-shift-of-negative UB). Target-specific CFLAGS propagate to the `test`
+# prerequisite and its per-lib targets (which always recompile).
+sanitize: CFLAGS += -fsanitize=undefined,address -fno-sanitize-recover=all
+sanitize: test
+	@echo "sanitize: OK"
 
 clean:
 	rm -rf $(BUILD)

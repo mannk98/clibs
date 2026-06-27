@@ -64,6 +64,7 @@ under `third_party/unity/`).
 ```sh
 make test     # build + run all suites (str_utils, ringbuf, dll, log, bitset, mempool, fixed, crc, fsm, vec, pqueue, rng, hex, base64, hashmap, stats, cobs, scheduler, event)
 make strict   # warning-clean compile gate (-Werror) for the reusable libs
+make sanitize # rebuild + run every suite under UBSan + ASan (catches UB/memory bugs that pass test+strict)
 make clean
 ```
 
