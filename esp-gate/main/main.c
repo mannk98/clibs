@@ -181,7 +181,10 @@ void app_main(void)
     uint8_t i2cbuf[2] = {0};
     (void) i2c_bus_write_reg(0x76, 0xF4, i2cbuf, 1);
     (void) i2c_bus_read_reg(0x76, 0xFA, i2cbuf, 2);
-    ESP_LOGI(TAG, "i2c reg0=%u", (unsigned) i2cbuf[0]);
+    uint8_t i2craw[2] = {0};
+    (void) i2c_bus_write(0x23, (const uint8_t[]){0x10}, 1);
+    (void) i2c_bus_read(0x23, i2craw, 2);
+    ESP_LOGI(TAG, "i2c reg0=%u raw0=%u", (unsigned) i2cbuf[0], (unsigned) i2craw[0]);
 
     /* spi_bus compile-gate: raw bus transfer + a software-CS spi_device. */
     (void) spi_bus_init();
