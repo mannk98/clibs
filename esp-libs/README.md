@@ -149,6 +149,8 @@ built-in auto-reconnect.
 - `i2c_bus_init(sda, scl)` then `i2c_bus_write_reg(addr, reg, data, len)` /
   `i2c_bus_read_reg(addr, reg, data, len)` (7-bit addr, repeated-start read). For
   BME280/OLED/RTC-class devices. Runtime verified on hardware later.
+- `i2c_bus_write(addr, data, len)` / `i2c_bus_read(addr, data, len)` — raw transfers
+  with no register/pointer byte, for command-based devices (BH1750, SHT3x).
 
 ### `spi_bus` — HSPI master + multi-device software CS
 
@@ -214,6 +216,23 @@ built-in auto-reconnect.
 
 - `rotary_init` + `rotary_update` (pure, host-tested): table-driven quarter-step decode → CW/CCW + position.
   `rotary_gpio_init` / `rotary_gpio_poll` read the A/B pins.
+
+### `bh1750` — ambient light (I2C)
+
+- `bh1750_parse` (pure, host-tested): 16-bit raw count → milli-lux (lux = raw / 1.2).
+  `bh1750_init` / `bh1750_read` over `i2c_bus` (continuous high-res mode, raw read).
+
+### `sht3x` — temperature + humidity (I2C)
+
+- `sht3x_parse` (pure, host-tested): validate 2× Sensirion CRC8 → milli-°C / milli-%RH
+  (int64 widen-before-multiply). `sht3x_init` / `sht3x_read` over `i2c_bus`
+  (single-shot high repeatability, ~15 ms).
+
+### `ds3231` — real-time clock (I2C)
+
+- `ds3231_decode` / `ds3231_encode` / `ds3231_temp_mc` (pure, host-tested): BCD↔time +
+  on-chip temperature. `ds3231_init` / `ds3231_get` / `ds3231_set` / `ds3231_read_temp`
+  over `i2c_bus` (register-mapped).
 
 ### Compile-gate
 
