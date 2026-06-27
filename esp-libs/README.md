@@ -9,9 +9,9 @@ FreeRTOS). Built bottom-up:
   `device_id`, `json`, `periodic`, `mdns_node`, `adc_a0`, `i2c_bus`, `spi_bus` — ESP8266-RTOS-SDK glue verified by
   the `esp-gate` link; the pure parts (`device_id_format`, the `json` builder) are
   host-Unity-tested.
-- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer`, `ds18b20`, `servo`, `hcsr04` —
-  GPIO/PWM/bit-bang glue verified by the `esp-gate` link; the pure parts
-  (`relay_level`, `dht_parse`, `dimmer_duty`) are host-Unity-tested. **Hardware run
+- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer`, `ds18b20`, `servo`, `hcsr04`, `bme280` —
+  GPIO/PWM/bit-bang/I2C glue verified by the `esp-gate` link; the pure parts
+  (`relay_level`, `dht_parse`, `dimmer_duty`, `bme280_parse`/`bme280_compensate`) are host-Unity-tested. **Hardware run
   is deferred** — bit-bang timing (dht) is a first cut to tune on real hardware.
 
 ## Layer-1 libraries
@@ -173,6 +173,13 @@ built-in auto-reconnect.
 - `hcsr04_us_to_mm(echo_us)` (pure, host-tested): echo time → mm.
 - `hcsr04_init(&h, trig, echo)` then `hcsr04_read(&h, &mm)` (trigger + bounded echo
   measure → `ESP_ERR_TIMEOUT` on no echo). Timing tuned on hardware.
+
+### `bme280` — T/H/P over I2C
+
+- `bme280_parse_calib` + `bme280_compensate` (pure, host-tested): Bosch fixed-point
+  compensation → SI units (milli-°C / milli-%RH / Pa).
+- `bme280_init(&d, BME280_ADDR_PRIMARY)` then `bme280_read(&d, &r)` — forced-mode
+  one-shot over `i2c_bus`. Runtime verified on hardware later.
 
 ### Compile-gate
 

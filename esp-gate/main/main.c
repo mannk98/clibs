@@ -27,6 +27,7 @@
 #include "servo.h"
 #include "hcsr04.h"
 #include "saturating_counter.h"
+#include "bme280.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -199,4 +200,14 @@ void app_main(void)
     (void) saturating_counter_inc(&sc);
     (void) saturating_counter_dec(&sc);
     ESP_LOGI(TAG, "satcnt=%d", (int) saturating_counter_get(&sc));
+
+    /* bme280 compile-gate. Touch the pure symbols (parse/compensate on zeroed
+       buffers) and the SDK-glue init so the linker pulls in both objects. */
+    bme280_calib bme_cal = {0};
+    bme280_reading bme_r;
+    (void) bme280_parse_calib((const uint8_t[26]){0}, (const uint8_t[7]){0}, &bme_cal);
+    (void) bme280_compensate(&bme_cal, 0, 0, 0, &bme_r);
+    bme280 bme_dev;
+    (void) bme280_init(&bme_dev, BME280_ADDR_PRIMARY);
+    ESP_LOGI(TAG, "bme280 temp_mc=%d", (int) bme_r.temp_mc);
 }
