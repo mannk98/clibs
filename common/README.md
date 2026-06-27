@@ -20,11 +20,18 @@ cross-compile for AVR unchanged.
 | `fixed`     | `fixed/`      | Q16.16 fixed-point value type (mul/div/sqrt + int/float conversion, no FPU). |
 | `crc`       | `crc/`        | Canonical checksums: `crc8_maxim`, `crc16_ccitt`, `crc16_modbus`, `crc32` (stateless functions). |
 | `fsm`       | `fsm/`        | Table-driven finite state machine (states × events → action + next state). |
+| `vec`       | `vec/`        | Generic dynamic array + stack over a caller buffer (value-copy `push`/`pop`/`get`/`set`). |
+| `pqueue`    | `pqueue/`     | Binary min-heap priority queue (`int32_t` key + opaque `void*` payload) over a caller array. |
+| `rng`       | `rng/`        | xorshift32 PRNG — a small stateful object (`seed`/`next`/`below`), deterministic from a seed. |
+| `hex`       | `hex/`        | Hex encode/decode (stateless functions); lowercase encode, upper/lower decode. |
+| `base64`    | `base64/`     | Base64 (RFC 4648) encode/decode (stateless functions) with `=` padding. |
 
 `crc` (stateless functions) and `fixed` (a value type like `int`) are not
 `self`-objects — the OOP struct+method convention applies only to the stateful
-libs (`dll`, `ringbuf`, `bitset`, `mempool`, `fsm`). `crc` is the canonical
-home for these checksums; `esp-libs/crc` will be de-duped to re-export it later.
+libs (`dll`, `ringbuf`, `bitset`, `mempool`, `fsm`, `vec`, `pqueue`, `rng`).
+`hex` and `base64` are likewise stateless functions, not `self`-objects. `crc`
+is the canonical home for these checksums; `esp-libs/crc` will be de-duped to
+re-export it later.
 
 ## Reusing a library
 
@@ -48,7 +55,7 @@ Host unit tests use [Unity](https://github.com/ThrowTheSwitch/Unity) (vendored
 under `third_party/unity/`).
 
 ```sh
-make test     # build + run all suites (str_utils, ringbuf, dll, log, bitset, mempool, fixed, crc, fsm)
+make test     # build + run all suites (str_utils, ringbuf, dll, log, bitset, mempool, fixed, crc, fsm, vec, pqueue, rng, hex, base64)
 make strict   # warning-clean compile gate (-Werror) for the reusable libs
 make clean
 ```
