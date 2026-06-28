@@ -9,10 +9,10 @@ FreeRTOS). Built bottom-up:
   `device_id`, `json`, `periodic`, `mdns_node`, `adc_a0`, `i2c_bus`, `spi_bus` — ESP8266-RTOS-SDK glue verified by
   the `esp-gate` link; the pure parts (`device_id_format`, the `json` builder) are
   host-Unity-tested.
-- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer`, `ds18b20`, `servo`, `hcsr04`, `bme280`, `ws2812`, `ir_nec`, `pir`, `ssd1306`, `max7219`, `rotary` —
+- **Layer 3 — device drivers (this set):** `relay`, `button`, `dht`, `pwm_dimmer`, `ds18b20`, `servo`, `hcsr04`, `bme280`, `ws2812`, `ir_nec`, `pir`, `ssd1306`, `max7219`, `rotary`, `tm1637`, `lcd1602` —
   GPIO/PWM/bit-bang/I2C/SPI glue verified by the `esp-gate` link; the pure parts
-  (`relay_level`, `dht_parse`, `dimmer_duty`, `bme280_parse`/`bme280_compensate`, `ws2812_render`, `ir_nec_decode`, `pir` FSM, `ssd1306_fb`, `max7219_encode`, `rotary` decode) are host-Unity-tested. **Hardware run
-  is deferred** — bit-bang timing (dht, ws2812, ir_nec) is a first cut to tune on real hardware.
+  (`relay_level`, `dht_parse`, `dimmer_duty`, `bme280_parse`/`bme280_compensate`, `ws2812_render`, `ir_nec_decode`, `pir` FSM, `ssd1306_fb`/`ssd1306_gfx`, `max7219_encode`, `rotary` decode, `tm1637_encode_number`, `lcd1602_encode_byte`) are host-Unity-tested. **Hardware run
+  is deferred** — bit-bang timing (dht, ws2812, ir_nec, tm1637) is a first cut to tune on real hardware.
 
 ## Layer-1 libraries
 
@@ -204,6 +204,8 @@ built-in auto-reconnect.
 ### `ssd1306` — 128×64 OLED (I2C)
 
 - `ssd1306_fb_*` (pure, host-tested): 1bpp page framebuffer (set/get/fill/clear pixel).
+  `ssd1306_draw_hline`/`_vline`/`_line`/`_rect`/`fill_rect` (pure, host-tested):
+  clipping graphics primitives (integer Bresenham line) over the framebuffer.
   `ssd1306_init` + `ssd1306_show` drive the panel over `i2c_bus`.
 
 ### `max7219` — LED 7-seg / 8×8 matrix (SPI)
@@ -250,6 +252,20 @@ built-in auto-reconnect.
 - `ina219_bus_mv` / `ina219_shunt_uv` / `ina219_current_ua` / `ina219_power_uw` /
   `ina219_calibration` (pure, host-tested). `ina219_init(shunt, maxI)` +
   `ina219_read_*` over `i2c_bus`.
+
+### `tm1637` — 4-digit 7-segment display (2-wire)
+
+- `tm1637_digit_segments` / `tm1637_encode_number` (pure, host-tested): digit →
+  common-cathode segment byte, and a 0–9999 value rendered across four segment
+  bytes with optional leading-zero blanking. `tm1637_init` / `tm1637_show` clock
+  the segments over the TM1637 2-wire (CLK/DIO) protocol. **COMPILE_GATE only.**
+
+### `lcd1602` — 16×2 char-LCD on a PCF8574 I2C backpack
+
+- `lcd1602_encode_byte` (pure, host-tested): frame one HD44780 byte into four
+  PCF8574 bytes in 4-bit mode (EN-high/EN-low per nibble, RS + backlight bits).
+  `lcd1602_init` / `lcd1602_command` / `lcd1602_putc` / `lcd1602_puts` /
+  `lcd1602_set_cursor` drive the display over `i2c_bus`. **COMPILE_GATE only.**
 
 ### Compile-gate
 
