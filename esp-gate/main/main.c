@@ -33,6 +33,7 @@
 #include "pir_gpio.h"
 #include "ssd1306.h"
 #include "ssd1306_text.h"
+#include "ssd1306_gfx.h"
 #include "max7219.h"
 #include "rotary_gpio.h"
 #include "stepper_gpio.h"
@@ -44,6 +45,8 @@
 #include "sk6812_dev.h"
 #include "ads1115_dev.h"
 #include "ina219_dev.h"
+#include "tm1637_dev.h"
+#include "lcd1602_dev.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -270,6 +273,13 @@ void app_main(void)
     ssd1306_draw_char(&oled.fb, 0, 0, 'A');
     (void) ssd1306_draw_string(&oled.fb, 0, 8, "hi");
 
+    /* ssd1306_gfx compile-gate: pure graphics primitives over the oled fb. */
+    ssd1306_draw_hline(&oled.fb, 0, 16, 10, true);
+    ssd1306_draw_vline(&oled.fb, 0, 16, 10, true);
+    ssd1306_draw_line(&oled.fb, 0, 16, 20, 32, true);
+    ssd1306_draw_rect(&oled.fb, 0, 16, 20, 10, true);
+    ssd1306_fill_rect(&oled.fb, 0, 16, 20, 10, true);
+
     /* L3 stepper/hx711/rc5 compile-gate. Touch one glue init/op each so the
        linker pulls in both objects (pure + SDK glue) of every driver. */
     stepper_gpio st;
@@ -346,4 +356,23 @@ void app_main(void)
     (void) ina219_read_power_uw(&ina_dev, &ina_power_uw);
     ESP_LOGI(TAG, "l3 sk6812/ads1115/ina219 linked uv=%d bus_mv=%d",
              (int) ads_uv, (int) ina_bus_mv);
+
+    /* L3 display/UI compile-gate (tm1637 2-wire 7-seg; lcd1602 char-LCD over the
+       shared i2c_bus brought up above). Touch the pure encode symbols + one glue
+       init/op each so the linker pulls in both objects of every driver. */
+    uint8_t tm_seg[4] = {0};
+    (void) tm1637_digit_segments(8);
+    tm1637_encode_number(1234, false, tm_seg);
+    tm1637 tm_dev;
+    (void) tm1637_init(&tm_dev, GPIO_NUM_14, GPIO_NUM_12, 7);
+    (void) tm1637_show(&tm_dev, tm_seg);
+
+    uint8_t lcd_seq[4] = {0};
+    lcd1602_encode_byte('A', true, true, lcd_seq);
+    lcd1602 lcd_dev;
+    (void) lcd1602_init(&lcd_dev, 0x27);
+    (void) lcd1602_set_cursor(&lcd_dev, 0, 0);
+    (void) lcd1602_puts(&lcd_dev, "hi");
+    ESP_LOGI(TAG, "l3 tm1637/lcd1602 linked seg0=%u seq0=%u",
+             (unsigned) tm_seg[0], (unsigned) lcd_seq[0]);
 }
