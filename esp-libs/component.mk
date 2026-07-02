@@ -5,13 +5,15 @@ COMPONENT_ADD_INCLUDEDIRS := backoff debounce filter mqtt_topic wifi_sta nvs_kv 
                              hysteresis crc map_range median throttle adc_a0 i2c_bus spi_bus \
                              ds18b20 servo hcsr04 saturating_counter bme280 ws2812 ir_nec pir \
                              ssd1306 max7219 rotary stepper hx711 rc5 bh1750 sht3x ds3231 \
-                             sk6812 ads1115 ina219 tm1637 lcd1602
+                             sk6812 ads1115 ina219 tm1637 lcd1602 \
+                             ota_version ota_fsm ota_manifest ota_dev
 COMPONENT_SRCDIRS         := backoff debounce filter mqtt_topic wifi_sta nvs_kv mqtt_node \
                              device_id json periodic mdns_node relay button dht pwm_dimmer \
                              hysteresis crc map_range median throttle adc_a0 i2c_bus spi_bus \
                              ds18b20 servo hcsr04 saturating_counter bme280 ws2812 ir_nec pir \
                              ssd1306 max7219 rotary stepper hx711 rc5 bh1750 sht3x ds3231 \
-                             sk6812 ads1115 ina219 tm1637 lcd1602
+                             sk6812 ads1115 ina219 tm1637 lcd1602 \
+                             ota_version ota_fsm ota_manifest ota_dev
 COMPONENT_OBJS := backoff/backoff.o debounce/debounce.o filter/filter.o \
                   mqtt_topic/mqtt_topic.o wifi_sta/wifi_sta.o \
                   nvs_kv/nvs_kv.o mqtt_node/mqtt_node.o \
@@ -46,5 +48,7 @@ COMPONENT_OBJS := backoff/backoff.o debounce/debounce.o filter/filter.o \
                   ads1115/ads1115.o ads1115/ads1115_dev.o \
                   ina219/ina219.o ina219/ina219_dev.o \
                   tm1637/tm1637.o tm1637/tm1637_dev.o \
-                  lcd1602/lcd1602.o lcd1602/lcd1602_dev.o
-COMPONENT_REQUIRES := nvs_flash mqtt mdns json lwip
+                  lcd1602/lcd1602.o lcd1602/lcd1602_dev.o \
+                  ota_version/ota_version.o ota_fsm/ota_fsm.o \
+                  ota_manifest/ota_manifest.o ota_dev/ota_dev.o
+COMPONENT_REQUIRES := nvs_flash mqtt mdns json lwip app_update esp_http_client

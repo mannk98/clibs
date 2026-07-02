@@ -267,6 +267,43 @@ built-in auto-reconnect.
   `lcd1602_init` / `lcd1602_command` / `lcd1602_putc` / `lcd1602_puts` /
   `lcd1602_set_cursor` drive the display over `i2c_bus`. **COMPILE_GATE only.**
 
+## OTA control-plane (L3: pure decision logic + SDK glue)
+
+`ota_version` / `ota_fsm` / `ota_manifest` are the pure, host-Unity-tested
+decision logic; `ota_dev` binds them to the ESP8266 RTOS SDK (esp_ota_ops +
+esp_http_client) and is **COMPILE_GATE only**.
+
+### `ota_version` — semantic-version parse/compare
+
+- `ota_version_parse` (pure, host-tested): parse a `"MAJOR.MINOR.PATCH"` string
+  (three decimal components, each 0..65535) into an `ota_version`.
+  `ota_version_cmp` / `ota_version_is_newer` decide whether a candidate image is
+  strictly newer than the running one.
+
+### `ota_fsm` — OTA lifecycle state machine + progress
+
+- `ota_fsm_init` / `ota_fsm_on(ev, arg)` / `ota_fsm_state` (pure, host-tested):
+  drive IDLE→CHECKING→DOWNLOADING→VERIFYING→APPLYING→DONE (with FAILED as an
+  absorbing abort state). `ota_fsm_progress` returns download completion as
+  `received*100/total` in `[0,100]` (uint64 widen, div-by-zero + over-cap guarded).
+
+### `ota_manifest` — announced-image field validator
+
+- `ota_manifest_valid(version, url, size, sha256_hex, max_size)` (pure,
+  host-tested; links `ota_version`): reject-path validation of an announced OTA
+  manifest — full semver `version`, `http://…` `url`, `0 < size <= max_size`, and
+  a 64-char lowercase-hex `sha256_hex` — before any flash is touched.
+
+### `ota_dev` — ESP8266 OTA updater (SDK glue)
+
+- `ota_init(current, max_size)` records the running version + size cap and resets
+  the FSM. `ota_handle_manifest(json, len)` extracts the manifest fields (via
+  `json_get`), validates them (`ota_manifest_valid`), checks
+  `ota_version_is_newer`, then streams the image over `esp_http_client` into the
+  OTA partition via `esp_ota_ops`, sets the boot partition and reboots.
+  `ota_mark_valid` cancels the rollback watchdog after a healthy boot.
+  **COMPILE_GATE only.**
+
 ### Compile-gate
 
 L2 wrappers require the real SDK (symbol resolution, FreeRTOS headers). They

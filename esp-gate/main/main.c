@@ -47,6 +47,10 @@
 #include "ina219_dev.h"
 #include "tm1637_dev.h"
 #include "lcd1602_dev.h"
+#include "ota_version.h"
+#include "ota_fsm.h"
+#include "ota_manifest.h"
+#include "ota_dev.h"
 
 static const char *TAG = "esp_libs_gate";
 
@@ -375,4 +379,29 @@ void app_main(void)
     (void) lcd1602_puts(&lcd_dev, "hi");
     ESP_LOGI(TAG, "l3 tm1637/lcd1602 linked seg0=%u seq0=%u",
              (unsigned) tm_seg[0], (unsigned) lcd_seq[0]);
+
+    /* OTA control-plane compile-gate (L3: ota_version/ota_fsm/ota_manifest pure +
+       ota_dev SDK glue). Touch the pure decision symbols + the glue init/handle so
+       the linker pulls in all four objects. */
+    ota_version ota_cur = {0}, ota_cand = {0};
+    (void) ota_version_parse("1.2.3", &ota_cur);
+    (void) ota_version_cmp(ota_cur, ota_cand);
+    (void) ota_version_is_newer(ota_cur, ota_cand);
+
+    ota_fsm ota_sm;
+    ota_fsm_init(&ota_sm);
+    (void) ota_fsm_on(&ota_sm, OTA_EV_START, 1024);
+    (void) ota_fsm_state(&ota_sm);
+    (void) ota_fsm_progress(&ota_sm);
+
+    (void) ota_manifest_valid("1.2.3", "http://h/f.bin", 1024,
+                              "0000000000000000000000000000000000000000000000000000000000000000",
+                              1u << 20);
+
+    ota ota_dev_gate;
+    (void) ota_init(&ota_dev_gate, ota_cur, 1u << 20);
+    (void) ota_handle_manifest(&ota_dev_gate, "{}", 2);
+    (void) ota_mark_valid(&ota_dev_gate);
+    ESP_LOGI(TAG, "ota control-plane linked progress=%u",
+             (unsigned) ota_fsm_progress(&ota_sm));
 }
