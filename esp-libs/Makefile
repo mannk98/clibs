@@ -4,8 +4,8 @@ CFLAGS := -std=c11 -Wall -Wextra -g
 UNITY  := ../common/third_party/unity
 BUILD  := build
 
-.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text ssd1306_gfx max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 sht3x ina219 sk6812 ads1115 tm1637 lcd1602 strict sanitize clean
-test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text ssd1306_gfx max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 sht3x ina219 sk6812 ads1115 tm1637 lcd1602
+.PHONY: test backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text ssd1306_gfx max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 sht3x ina219 sk6812 ads1115 tm1637 lcd1602 ota_version ota_fsm ota_manifest strict sanitize clean
+test: backoff debounce filter mqtt_topic device_id json_build relay_level dht_parse dimmer_duty hysteresis crc map_range median throttle ds18b20_parse servo_duty hcsr04_dist saturating_counter bme280_parse ws2812_render ir_nec pir ssd1306_fb ssd1306_text ssd1306_gfx max7219_encode rotary stepper rc5 hx711 bh1750 ds3231 sht3x ina219 sk6812 ads1115 tm1637 lcd1602 ota_version ota_fsm ota_manifest
 
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -200,6 +200,21 @@ lcd1602: | $(BUILD)
 	    lcd1602/test_lcd1602.c lcd1602/lcd1602.c $(UNITY)/unity.c
 	./$(BUILD)/test_lcd1602
 
+ota_version: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Iota_version -o $(BUILD)/test_ota_version \
+	    ota_version/test_ota_version.c ota_version/ota_version.c $(UNITY)/unity.c
+	./$(BUILD)/test_ota_version
+
+ota_fsm: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Iota_fsm -o $(BUILD)/test_ota_fsm \
+	    ota_fsm/test_ota_fsm.c ota_fsm/ota_fsm.c $(UNITY)/unity.c
+	./$(BUILD)/test_ota_fsm
+
+ota_manifest: | $(BUILD)
+	$(CC) $(CFLAGS) -I$(UNITY) -Iota_manifest -Iota_version -o $(BUILD)/test_ota_manifest \
+	    ota_manifest/test_ota_manifest.c ota_manifest/ota_manifest.c ota_version/ota_version.c $(UNITY)/unity.c
+	./$(BUILD)/test_ota_manifest
+
 strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ibackoff    -c backoff/backoff.c       -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Idebounce   -c debounce/debounce.c     -o /dev/null
@@ -239,6 +254,9 @@ strict:
 	$(CC) -std=c11 -Wall -Wextra -Werror -Iads1115 -c ads1115/ads1115.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Itm1637 -c tm1637/tm1637.c -o /dev/null
 	$(CC) -std=c11 -Wall -Wextra -Werror -Ilcd1602 -c lcd1602/lcd1602.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Iota_version -c ota_version/ota_version.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Iota_fsm -c ota_fsm/ota_fsm.c -o /dev/null
+	$(CC) -std=c11 -Wall -Wextra -Werror -Iota_manifest -Iota_version -c ota_manifest/ota_manifest.c -o /dev/null
 	@echo "strict: OK"
 
 # Sanitizer gate: rebuild + run every host suite under UBSan + ASan. Catches UB
